@@ -48,36 +48,22 @@ proc getMasterHost(slave: PepperSlave): string =
     slave.configSlave.getSectionValue("master", "port")
   ]
 
-proc packToFirstLevel(slave: PepperSlave, data: string, firstLevel: var FirstLevel): bool =
-  ## compress, encrypt and signs a message
-  var zippedRaw: string = ""
-  if not zipData(data, zippedRaw):
-    debug("[slave] could not zip data")
-    return false
-  
+# proc packToFirstLevel(slave: PepperSlave, data: string, firstLevel: var FirstLevel): bool =
+
+proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
   let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
-  let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey
-  var cryptedRaw: string = ""
-  if not encryptData(myPrivatKey, receiverPublicKey, zippedRaw, cryptedRaw):
-    debug("[slave] could not encrypt data")
-    return false
-  
-  var signature: Signature
-  if not genSignature(myPrivatKey, myPublicKey, cryptedRaw, signature):
-    debug("[slave] could not generate signature")
-    return false
-
-  firstLevel.senderPublicKey = myPublicKey
-  firstLevel.raw = cryptedRaw
-  firstLevel.signature = signature
-  return true
-
-proc handleConnection(slave: PepperSlave): Future[void] {.async.} = 
+  let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
   while true:
     let data = "FOO"
     var firstLevel: FirstLevel
-    if not slave.packToFirstLevel(data, firstLevel):
+    if not packToFirstLevel(
+        myPrivatKey,
+        myPublicKey,
+        receiverPublicKey,
+        data,
+        firstLevel
+        ):
       echo "could not packToFirstLevel"
       return
     var firstLevelMsg = pack(firstLevel)

@@ -126,3 +126,25 @@ proc genSignature*(myPrivateKey: PrivateKey, myPublicKey: PublicKey,
     return false
   return true
   
+
+proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey , receiverPublicKey: PublicKey , data: string, firstLevel: var FirstLevel): bool =
+  ## compress, encrypt and signs a message
+  var zippedRaw: string = ""
+  if not zipData(data, zippedRaw):
+    debug("[slave] could not zip data")
+    return false
+  
+  var cryptedRaw: string = ""
+  if not encryptData(myPrivatKey, receiverPublicKey, zippedRaw, cryptedRaw):
+    debug("[slave] could not encrypt data")
+    return false
+  
+  var signature: Signature
+  if not genSignature(myPrivatKey, myPublicKey, cryptedRaw, signature):
+    debug("[slave] could not generate signature")
+    return false
+
+  firstLevel.senderPublicKey = myPublicKey
+  firstLevel.raw = cryptedRaw
+  firstLevel.signature = signature
+  return true  
