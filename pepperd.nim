@@ -2,6 +2,13 @@ import messages
 import pepperdImports
 import typesPepperd
 import logging
+import hashes
+
+proc hash(ws: AsyncWebSocket): Hash = 
+  var h: Hash = 0
+  h = h !& hash(ws.sock.getFd)
+  return h
+  # h = h !& hash
 
 proc genKeys(pepperd: Pepperd) = 
   let seed = seed()
@@ -55,8 +62,22 @@ proc httpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
 
 proc handleLostClient(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   info("[pepperd] lost client: ", request.client.getPeerAddr)
+  if pepperd.clients.contains(ws):
+    debug("[pepperd] remove ws from clients table")
+    pepperd.clients.del(ws)
   if not request.client.isClosed():
     request.client.close()
+
+proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, data: string): Future[void] {.async.} =
+  debug("[pepperd] in handle ws client")
+  # echo repr ws
+  if pepperd.clients.contains(ws):
+    echo "ws known"
+  else:
+    pepperd.clients.add(
+      ws,
+      Client(ws: ws, request: request)
+    )
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   discard
@@ -81,7 +102,7 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
       await pepperd.handleLostClient(request, ws)
       break
     of Text:
-      discard
+      asyncCheck pepperd.handleWsMessage(request, ws, data)
     of Binary:
       debug("[pepperd] 'binary' ws not implemented: ", request.client.getPeerAddr)
     of Ping:

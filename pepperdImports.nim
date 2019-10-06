@@ -10,6 +10,7 @@ import logging
 import net
 import strutils
 import asyncnet
+import tables
 # -----------
 export parsecfg
 export os
@@ -23,3 +24,4 @@ export logging
 export net
 export strutils
 export asyncnet
+export tables
