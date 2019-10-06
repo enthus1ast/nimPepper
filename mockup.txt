@@ -43,5 +43,5 @@ error: string
 
 [compressed|crypted]
 senderPublicKey: string
-crypted: string
+raw: string
 signature: string

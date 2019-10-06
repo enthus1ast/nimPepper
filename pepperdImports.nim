@@ -11,8 +11,10 @@ import net
 import strutils
 import asyncnet
 import tables
-import json
+# import json
+import msgpack4nim
 import xxtea
+import nativesockets
 # -----------
 export parsecfg
 export os
@@ -27,5 +29,7 @@ export net
 export strutils
 export asyncnet
 export tables
-export json
+# export json
+export msgpack4nim
 export xxtea
+export nativesockets

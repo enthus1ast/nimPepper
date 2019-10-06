@@ -131,9 +131,9 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
       await pepperd.handleLostClient(request, ws)
       break
     of Text:
-      asyncCheck pepperd.handleWsMessage(request, ws, data)
+      debug("[pepperd] 'text' ws not implemented: ", request.client.getPeerAddr)
     of Binary:
-      debug("[pepperd] 'binary' ws not implemented: ", request.client.getPeerAddr)
+      asyncCheck pepperd.handleWsMessage(request, ws, data)
     of Ping:
       debug("[pepperd] 'ping' ws not implemented: ", request.client.getPeerAddr)
     of Pong:
