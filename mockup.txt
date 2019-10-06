@@ -1,0 +1,38 @@
+### Websocket logging/event protocol 
+
+[log]
+# slave -> master
+messageId: string
+senderName: string
+senderPublicKey: string
+eventName: string
+eventMsg: string|Json
+
+##################################################
+### Control and respond message
+
+[controlReq]
+# master -> slave
+messageId: string
+senderName: string
+senderPublicKey: string
+command: string
+param: string|Json
+
+
+[controlRes]
+# slave -> master
+messageId: string
+resToId: strings
+senderName: string
+senderPublicKey: string
+command: string
+output: string
+
+##################################################
+### Crypted / compressed 
+
+[compressed|crypted]
+senderPublicKey: string
+crypted: string
+signature: string
