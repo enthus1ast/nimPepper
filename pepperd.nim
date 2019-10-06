@@ -84,8 +84,12 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
     info("[pepperd] could not extract firstLevel: ", request.client.getPeerAddr)
     return
   echo firstLevel
-  
-
+  ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  ## maybe check if client with this publicKey is known
+  ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  if not verifySignature(firstLevel):
+    info("[pepperd] could not verify signature on data")
+    return
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   discard
   while true:

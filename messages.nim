@@ -1,3 +1,4 @@
+import pepperdImports
 type
   MessageType* {.pure.} = enum
     MsgLog, MsgControlReq, MsgControlRes  
@@ -21,6 +22,6 @@ type
     command*: string
     output*: string    
   FirstLevel* = object 
-    senderPublicKey*: string
+    senderPublicKey*: PublicKey
     raw*: string
-    signature*: string    
+    signature*: Signature
