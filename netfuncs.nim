@@ -126,8 +126,8 @@ proc genSignature*(myPrivateKey: PrivateKey, myPublicKey: PublicKey,
     return false
   return true
   
-
-proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey , receiverPublicKey: PublicKey , data: string, firstLevel: var FirstLevel): bool =
+proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
+    data: string, firstLevel: var FirstLevel): bool =
   ## compress, encrypt and signs a message
   var zippedRaw: string = ""
   if not zipData(data, zippedRaw):
