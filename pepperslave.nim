@@ -48,47 +48,39 @@ proc getMasterHost(slave: PepperSlave): string =
     slave.configSlave.getSectionValue("master", "port")
   ]
 
+proc packToFirstLevel(slave: PepperSlave, data: string, firstLevel: var FirstLevel): bool =
+  ## compress, encrypt and signs a message
+  var zippedRaw: string = ""
+  if not zipData(data, zippedRaw):
+    debug("[slave] could not zip data")
+    return false
+  
+  let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
+  let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
+  let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey
+  var cryptedRaw: string = ""
+  if not encryptData(myPrivatKey, receiverPublicKey, zippedRaw, cryptedRaw):
+    debug("[slave] could not encrypt data")
+    return false
+  
+  var signature: Signature
+  if not genSignature(myPrivatKey, myPublicKey, cryptedRaw, signature):
+    debug("[slave] could not generate signature")
+    return false
 
+  firstLevel.senderPublicKey = myPublicKey
+  firstLevel.raw = cryptedRaw
+  firstLevel.signature = signature
+  return true
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} = 
   while true:
-    let raw = "FOOO"
-    var zippedRaw: string = ""
-    if not zipData(raw, zippedRaw):
-      debug("[slave] could not zip data")
-      return
-    
-    let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
-    let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
-    let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey
-    var cryptedRaw: string = ""
-    if not encryptData(myPrivatKey, receiverPublicKey, zippedRaw, cryptedRaw):
-      debug("[slave] could not encrypt data")
-      return
-    
-    echo "cryptedRaw: ",cryptedRaw.len
-
-    var signature: Signature
-    if not genSignature(myPrivatKey, myPublicKey, cryptedRaw, signature):
-      debug("[slave] could not generate signature")
-      return
-
-    # signature[0] = '1'.byte
-    # cryptedRaw[0] = '1'.char
-
+    let data = "FOO"
     var firstLevel: FirstLevel
-    firstLevel.senderPublicKey = myPublicKey
-    firstLevel.raw = cryptedRaw
-    firstLevel.signature = signature
-
+    if not slave.packToFirstLevel(data, firstLevel):
+      echo "could not packToFirstLevel"
+      return
     var firstLevelMsg = pack(firstLevel)
-
-
-    # var firstLevelJson = %* {
-    #   "senderPublicKey": firstLevel.senderPublicKey.toString,
-    #   "raw": firstLevel.raw,
-    #   "signature": firstLevel.signature.toString
-    # }
     echo $firstLevelMsg
 
     await sendBinary(slave.ws, firstLevelMsg)
