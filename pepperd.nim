@@ -1,8 +1,9 @@
 import messages
 import pepperdImports
 import typesPepperd
-import logging
+import logger
 import hashes
+import netfuncs
 
 proc hash(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
@@ -71,13 +72,19 @@ proc handleLostClient(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): F
 proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, data: string): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
   # echo repr ws
-  if pepperd.clients.contains(ws):
-    echo "ws known"
-  else:
+  if not pepperd.clients.contains(ws):
     pepperd.clients.add(
       ws,
       Client(ws: ws, request: request)
     )
+  else:
+    echo "ws known"
+  var firstLevel: FirstLevel
+  if not extractFirstLevel(data, firstLevel):
+    info("[pepperd] could not extract firstLevel: ", request.client.getPeerAddr)
+    return
+  echo firstLevel
+  
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   discard
@@ -131,7 +138,5 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
   )
 
 when isMainModule:
-  var consoleLog = newConsoleLogger()
-  addHandler(consoleLog)
   var pepperd = newPepperd()
   waitFor pepperd.run()

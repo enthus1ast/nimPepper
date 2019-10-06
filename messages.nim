@@ -20,3 +20,7 @@ type
     # slave -> master
     command*: string
     output*: string    
+  FirstLevel* = object 
+    senderPublicKey*: string
+    raw*: string
+    signature*: string    

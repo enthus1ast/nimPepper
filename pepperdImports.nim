@@ -11,6 +11,7 @@ import net
 import strutils
 import asyncnet
 import tables
+import json
 # -----------
 export parsecfg
 export os
@@ -25,3 +26,4 @@ export net
 export strutils
 export asyncnet
 export tables
+export json
