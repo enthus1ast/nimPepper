@@ -83,7 +83,7 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
   if not extractFirstLevel(data, firstLevel):
     info("[pepperd] could not extract firstLevel: ", request.client.getPeerAddr)
     return
-  echo firstLevel
+  # echo firstLevel
 
   ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
   ## maybe check if client with this publicKey is known

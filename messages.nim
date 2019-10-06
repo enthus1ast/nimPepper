@@ -1,9 +1,14 @@
 import pepperdImports
 type
+  MessageConcept* = concept c
+    c.messageType is MessageType
   MessageType* {.pure.} = enum
     MsgLog, MsgControlReq, MsgControlRes  
+  MessageEnvelope* = object
+    messageType*: MessageType
+    msg*: string
   MsgBase* = ref object of RootObj
-    version: byte
+    version*: byte
     messageType*: MessageType
     messageId*: string
     timestamp*: string

@@ -165,3 +165,8 @@ proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: 
   firstLevel.raw = cryptedRaw
   firstLevel.signature = signature
   return true  
+
+proc packEnvelope(msg: MessageConcept): MessageEnvelope = 
+  result = MessageEnvelope()
+  result.messageType = msg.messageType
+  result.msg = pack(msg)
