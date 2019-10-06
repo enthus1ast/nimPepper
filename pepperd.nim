@@ -36,6 +36,7 @@ proc createEnvironment(pepperd: Pepperd) =
   if not existsFile(pepperd.pathConfigPepperd):
     pepperd.configPepperd = newConfig()
     pepperd.genKeys()
+    pepperd.configPepperd.setSectionKey("master", "httpport", "8989")
     writeConfig(
       pepperd.configPepperd,
       pepperd.pathConfigPepperd
@@ -48,6 +49,7 @@ proc newPepperd(): Pepperd =
   result.pathPepperd = getCurrentDir()
   result.createEnvironment()
   result.configPepperd = loadConfig(result.pathConfigPepperd)
+  result.httpserver = newAsyncHttpServer()
 
 when isMainModule:
   var pepperd = newPepperd()

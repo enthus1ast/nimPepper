@@ -1,23 +1,22 @@
 type
-  MsgLog* = object
-    # slave -> master
+  MessageType* {.pure.} = enum
+    MsgLog, MsgControlReq, MsgControlRes  
+  MsgBase* = ref object of RootObj
+    version: byte
+    messageType*: MessageType
     messageId*: string
+    timestamp*: string
     senderName*: string
-    senderPublicKey*: string
+    senderPublicKey*: string    
+  MsgLog* = object of MsgBase
+    # slave -> master
     eventName*: string
     eventMsg*: string #|Json    
-  MsgControlReq* = object
+  MsgControlReq* = object of MsgBase
     # master -> slave
-    messageId*: string
-    senderName*: string
-    senderPublicKey*: string
     command*: string
     param*: string #|Json
-  MsgControlRes* = object
+  MsgControlRes* = object of MsgBase
     # slave -> master
-    messageId*: string
-    resToId*: string
-    senderName*: string
-    senderPublicKey*: string
     command*: string
     output*: string    

@@ -2,8 +2,14 @@ import parsecfg
 import os
 import ed25519
 import base64
+import asynchttpserver
+import websocket
+import asyncdispatch
 # -----------
 export parsecfg
 export os
 export ed25519
 export base64
+export asynchttpserver
+export websocket
+export asyncdispatch

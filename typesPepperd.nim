@@ -7,3 +7,4 @@ type
     pathConfigDir*: string # dir of config
     pathConfigPepperd*: string # the pepperd config
     configPepperd*: Config
+    httpserver*: Asynchttpserver

@@ -2,6 +2,9 @@
 
 [log]
 # slave -> master
+version: byte
+messageType: enum [MessageType]
+timestamp: string
 messageId: string
 senderName: string
 senderPublicKey: string
@@ -13,21 +16,27 @@ eventMsg: string|Json
 
 [controlReq]
 # master -> slave
+version: byte
+messageType: enum [MessageType]
+timestamp: string
 messageId: string
 senderName: string
 senderPublicKey: string
 command: string
 param: string|Json
 
-
 [controlRes]
 # slave -> master
+version: byte
+messageType: enum [MessageType]
+timestamp: string
 messageId: string
 resToId: strings
 senderName: string
 senderPublicKey: string
 command: string
 output: string
+error: string
 
 ##################################################
 ### Crypted / compressed 
