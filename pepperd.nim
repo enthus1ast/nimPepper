@@ -97,9 +97,15 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
     info("[pepperd] could not unpackFromFirstLevel") 
     return
   echo "unzippedRaw: ", unzippedRaw
+
+  var envelope: MessageEnvelope
+  if not openEnvelope(unzippedRaw, envelope):
+    info("[pepperd] could not unpackEnvelope")
+    return
+  
+  debug "Got: ", envelope.messageType
   
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
-  discard
   while true:
     var 
       opcode: Opcode
@@ -130,6 +136,7 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
       debug("[pepperd] 'pong' ws not implemented: ", request.client.getPeerAddr)
     of Cont:
       debug("[pepperd] 'cont' ws not implemented: ", request.client.getPeerAddr)
+
 
 proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   # echo request

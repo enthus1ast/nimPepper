@@ -3,8 +3,9 @@ type
   MessageConcept* = concept c
     c.messageType is MessageType
   MessageType* {.pure.} = enum
-    MsgLog, MsgControlReq, MsgControlRes  
+    MsgLog, MsgControlReq, MsgControlRes, MsgPing, MsgPong, MsgUntrusted
   MessageEnvelope* = object
+    nonce*: string
     messageType*: MessageType
     msg*: string
   MsgBase* = ref object of RootObj
@@ -17,7 +18,10 @@ type
   MsgLog* = object of MsgBase
     # slave -> master
     eventName*: string
-    eventMsg*: string #|Json    
+    eventMsg*: string #|Json
+  MsgPing* = object of MsgBase
+  MsgPong* = object of MsgBase
+  MsgUntrusted* = object of MsgBase
   MsgControlReq* = object of MsgBase
     # master -> slave
     command*: string

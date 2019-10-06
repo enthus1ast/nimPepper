@@ -48,28 +48,31 @@ proc getMasterHost(slave: PepperSlave): string =
     slave.configSlave.getSectionValue("master", "port")
   ]
 
-# proc packToFirstLevel(slave: PepperSlave, data: string, firstLevel: var FirstLevel): bool =
-
-proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
+proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} = 
   let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
   let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
   let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
-  while true:
-    let data = "FOO"
-    var firstLevel: FirstLevel
-    if not packToFirstLevel(
-        myPrivatKey,
-        myPublicKey,
-        receiverPublicKey,
-        data,
-        firstLevel
-        ):
-      echo "could not packToFirstLevel"
-      return
-    var firstLevelMsg = pack(firstLevel)
-    echo $firstLevelMsg
+  let envelope = packEnvelope(msg)
+  var firstLevel: FirstLevel
+  if not packToFirstLevel(
+      myPrivatKey,
+      myPublicKey,
+      receiverPublicKey,
+      pack(envelope),
+      firstLevel
+      ):
+    echo "could not packToFirstLevel"
+    return
+  var firstLevelMsg = pack(firstLevel)
+  echo $firstLevelMsg
+  await sendBinary(slave.ws, firstLevelMsg)
 
-    await sendBinary(slave.ws, firstLevelMsg)
+proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
+  while true:
+    var helo = MsgPing()
+    helo.messageType = MessageType.MsgPing
+    await slave.send(helo)
+    
     # var signature: string = ""
     # if not 
     # if slave.ws.sock.isClosed:

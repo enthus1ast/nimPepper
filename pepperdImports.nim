@@ -15,6 +15,7 @@ import tables
 import msgpack4nim
 import xxtea
 import nativesockets
+import random
 # -----------
 export parsecfg
 export os
@@ -33,3 +34,4 @@ export tables
 export msgpack4nim
 export xxtea
 export nativesockets
+export random

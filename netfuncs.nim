@@ -166,7 +166,20 @@ proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: 
   firstLevel.signature = signature
   return true  
 
-proc packEnvelope(msg: MessageConcept): MessageEnvelope = 
+proc randomString(len: int = 10): string = 
+  result = ""
+  for idx in 0..len-1:
+    result.add(random(255).char)
+
+proc packEnvelope*(msg: MessageConcept): MessageEnvelope = 
   result = MessageEnvelope()
+  result.nonce = randomString()
   result.messageType = msg.messageType
   result.msg = pack(msg)
+
+proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool = 
+  try:
+    unpack(str, envelope)
+  except:
+    return false
+  return true
