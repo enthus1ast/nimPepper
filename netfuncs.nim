@@ -11,8 +11,19 @@ proc genTo[T](str: string): T =
 proc toPublicKey(str: string): PublicKey = 
   return genTo[PublicKey](str)
   
+proc toPrivateKey*(str: string): PrivateKey = 
+  return genTo[PrivateKey](str)
+
 proc toSignature(str: string): Signature = 
   return genTo[Signature](str)
+
+proc genToString[T](tt: T): string = 
+  result = ""
+  for idx in 0..tt.len-1:
+    result.add tt[idx].char
+
+proc toString(tt: SharedSecret): string =
+  return genToString[SharedSecret](tt)
 
 proc extractFirstLevel*(data: string, firstLevel: var FirstLevel): bool =
   ## extracts the first level from data soup, 
@@ -49,7 +60,6 @@ proc extractFirstLevel*(data: string, firstLevel: var FirstLevel): bool =
   else:
     error("no signature")
     return false
-  
   return true
 
 proc verifySignature*(firstLevel: FirstLevel): bool = 
@@ -58,3 +68,23 @@ proc verifySignature*(firstLevel: FirstLevel): bool =
     firstLevel.signature,
     firstLevel.senderPublicKey
   )
+
+proc uncryptData*(myPrivateKey: PrivateKey, senderPublicKey: PublicKey, 
+    raw: string, uncryptedRaw: var string): bool =
+  ## uncrypts data
+  ## returns true on sucess 
+  ## false otherwise
+  let encryptionKey: string = keyExchange(senderPublicKey, myPrivateKey).toString()
+  let uncryptedRaw = decrypt(raw, encryptionKey)
+  if uncryptedRaw == "": return false
+  else: return true
+
+proc unzipData*(uncryptedRaw: string, unzippedRaw: var string): bool = 
+  ## unzips data
+  ## returns true on success
+  ## false otherwise
+  try:
+    unzippedRaw = uncompress(uncryptedRaw)
+  except:
+    return false
+  return true

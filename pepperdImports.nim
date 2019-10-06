@@ -12,6 +12,7 @@ import strutils
 import asyncnet
 import tables
 import json
+import xxtea
 # -----------
 export parsecfg
 export os
@@ -27,3 +28,4 @@ export strutils
 export asyncnet
 export tables
 export json
+export xxtea
