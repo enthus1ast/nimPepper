@@ -89,22 +89,12 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
   ## maybe check if client with this publicKey is known
   ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  if not verifySignature(firstLevel):
-    info("[pepperd] could not verify signature on data")
-    return
-
-  var uncryptedRaw: string = ""
+  
   let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-  let senderPublicKey = firstLevel.senderPublicKey
-  let raw = firstLevel.raw
-  if not uncryptData(myPrivateKey, senderPublicKey, raw, uncryptedRaw):
-    info("[pepperd] could not uncrypt data!")
-    return
-  echo "uncryptedRaw: ", uncryptedRaw
-
+  
   var unzippedRaw: string = ""
-  if not unzipData(uncryptedRaw, unzippedRaw):
-    info("[pepperd] could not uncompress data!")
+  if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
+    info("[pepperd] could not unpackFromFirstLevel") 
     return
   echo "unzippedRaw: ", unzippedRaw
   

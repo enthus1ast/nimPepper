@@ -126,6 +126,23 @@ proc genSignature*(myPrivateKey: PrivateKey, myPublicKey: PublicKey,
     return false
   return true
   
+proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, data: var string): bool =
+  let senderPublicKey = firstLevel.senderPublicKey
+  if not verifySignature(firstLevel):
+    info("[pepperd] could not verify signature on data")
+    return false
+
+  var uncryptedRaw: string = ""
+  let raw = firstLevel.raw
+  if not uncryptData(myPrivateKey, senderPublicKey, raw, uncryptedRaw):
+    info("[pepperd] could not uncrypt data!")
+    return false
+
+  if not unzipData(uncryptedRaw, data):
+    info("[pepperd] could not uncompress data!")
+    return false
+  return true
+
 proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
     data: string, firstLevel: var FirstLevel): bool =
   ## compress, encrypt and signs a message
