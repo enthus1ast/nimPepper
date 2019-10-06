@@ -108,7 +108,6 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
     return
   echo "unzippedRaw: ", unzippedRaw
   
-
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   discard
   while true:

@@ -1,4 +1,6 @@
 import pepperdImports
 type
-  PepperSlave* = object
-    configSlave*: Config
+  PepperSlave* = ref object
+    configPepperSlave*: Config
+    pathPepperSlave*: string
+    pathConfigPepperSlave*: string
