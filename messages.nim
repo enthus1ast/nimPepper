@@ -8,7 +8,7 @@ type
     nonce*: string
     messageType*: MessageType
     msg*: string
-  MsgBase* = ref object of RootObj
+  MsgBase* = object of RootObj
     version*: byte
     messageType*: MessageType
     messageId*: string
@@ -19,6 +19,7 @@ type
     # slave -> master
     eventName*: string
     eventMsg*: string #|Json
+  MsgLogResp* = object of MsgBase
   MsgPing* = object of MsgBase
   MsgPong* = object of MsgBase
   MsgUntrusted* = object of MsgBase

@@ -144,7 +144,7 @@ slave-&gt;server<y:LabelModel>
             <y:ProxyAutoBoundsNode>
               <y:Realizers active="0">
                 <y:GroupNode>
-                  <y:Geometry height="217.30193972680422" width="373.0" x="377.5" y="486.4609375"/>
+                  <y:Geometry height="219.298394757732" width="373.0" x="377.5" y="484.4644824690722"/>
                   <y:Fill color="#F5F5F5" transparent="false"/>
                   <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
                   <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="t" textColor="#000000" verticalTextPosition="bottom" visible="true" width="373.0" x="0.0" y="0.0">config</y:NodeLabel>
@@ -173,8 +173,9 @@ slave-&gt;server<y:LabelModel>
                   <y:Geometry height="83.8195899381443" width="343.0" x="392.5" y="522.921875"/>
                   <y:Fill color="#FFCC00" transparent="false"/>
                   <y:BorderStyle color="#000000" raised="false" type="line" width="1.0"/>
-                  <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="73.84375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="312.859375" x="15.0703125" y="4.987919969072209">%pepper%/slaves/%slavename%/log/
+                  <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="87.8125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="312.859375" x="15.0703125" y="-1.996455030927791">%pepper%/slaves/%slavename%/log/
 %pepper%/slaves/%slavename%/config/
+%pepper%/slaves/%slavename%.pubkey
 %pepper%/commanders.conf
 %pepper%/unacceptedKeys/%slavename%.pubkey
 %pepper%/config/masterconfig.ini<y:LabelModel>

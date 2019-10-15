@@ -4,6 +4,8 @@ import typesPepperd
 import logger
 import hashes
 import netfuncs
+import keymanager
+# import masterMessageHandlers
 
 proc hash(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
@@ -50,7 +52,7 @@ proc createEnvironment(pepperd: Pepperd) =
   else:
     pepperd.configPepperd = loadConfig(pepperd.pathConfigPepperd)
 
-proc newPepperd(): Pepperd = 
+proc newPepperd*(): Pepperd = 
   result = Pepperd()
   result.pathPepperd = getCurrentDir()
   result.createEnvironment()
@@ -84,12 +86,7 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
     info("[pepperd] could not extract firstLevel: ", request.client.getPeerAddr)
     return
   # echo firstLevel
-
-  ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  ## maybe check if client with this publicKey is known
-  ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-  
+  # echo firstLevel
   let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
   
   var unzippedRaw: string = ""
@@ -102,9 +99,23 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
   if not openEnvelope(unzippedRaw, envelope):
     info("[pepperd] could not unpackEnvelope")
     return
-  
+
   debug "Got: ", envelope.messageType
-  
+  # extractMessage(envelope)
+  # echo foo
+  # echo msg
+  ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  ## maybe check if client with this publicKey is known
+  ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  # let msgMap = envelope.msg.toAny
+  # echo msgMap
+  # if pepperdfirstLevel.senderPublicKey.
+  # case envelope.messageType
+  # of MessageType.MsgLog:
+  #   await masterHandleLog()
+  # else:
+  #   echo "could not handle message"
+
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   while true:
     var 

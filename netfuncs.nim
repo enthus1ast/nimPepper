@@ -28,7 +28,6 @@ proc toString*(tt: SharedSecret|PublicKey): string = ## todo not needet??
 proc toString*(tt: Signature|PrivateKey): string = ## todo not needet??
   return genToString[Signature](tt)
 
-
 proc extractFirstLevel*(data: string, firstLevel: var FirstLevel): bool =
   ## extracts the first level from data soup, 
   ## returns true if sucessfull
@@ -128,6 +127,8 @@ proc genSignature*(myPrivateKey: PrivateKey, myPublicKey: PublicKey,
   
 proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, data: var string): bool =
   let senderPublicKey = firstLevel.senderPublicKey
+  echo senderPublicKey
+  echo firstLevel
   if not verifySignature(firstLevel):
     info("[pepperd] could not verify signature on data")
     return false
@@ -142,7 +143,7 @@ proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, dat
     info("[pepperd] could not uncompress data!")
     return false
   return true
-
+  
 proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
     data: string, firstLevel: var FirstLevel): bool =
   ## compress, encrypt and signs a message
@@ -173,7 +174,7 @@ proc randomString(len: int = 10): string =
 
 proc packEnvelope*(msg: MessageConcept): MessageEnvelope = 
   result = MessageEnvelope()
-  result.nonce = randomString()
+  # result.nonce = randomString()
   result.messageType = msg.messageType
   result.msg = pack(msg)
 
@@ -183,3 +184,21 @@ proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool =
   except:
     return false
   return true
+
+template extractMessage*(envelope: MessageEnvelope): untyped = 
+  # var foo
+  # var msg: 
+  # var msg = 
+  case envelope.messageType
+  of MessageType.MsgLog:
+    var msg {.inject.}: MsgLog
+    unpack(envelope.msg, msg)
+    # msg
+    # return msg
+  of MessageType.MsgPing:
+    var msg {.inject.}: MsgPing
+    unpack(envelope.msg, msg)
+    # msg
+    # return msg
+  else:
+    echo "unknown message to extractMessage"

@@ -3,6 +3,7 @@ import typesPepperSlave
 import logger
 import netfuncs
 import messages
+import json
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
@@ -63,6 +64,7 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
       ):
     echo "could not packToFirstLevel"
     return
+  # echo firstLevel
   var firstLevelMsg = pack(firstLevel)
   echo $firstLevelMsg
   await sendBinary(slave.ws, firstLevelMsg)
