@@ -49,6 +49,36 @@ proc getMasterHost(slave: PepperSlave): string =
     slave.configSlave.getSectionValue("master", "port")
   ]
 
+proc recv(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
+  var 
+    opcode: Opcode
+    data: string
+  try:
+    (opcode, data) = await slave.ws.readData()
+  except:
+    debug("[slave] ws connection interrupted: ") #, client.request.client.getPeerAddr)
+    # await pepperd.handleLostClient(client.request, client.ws)
+    raise
+  case opcode
+  of Close:
+    debug("[pepperd] ws connection closed: ") #, client.peerAddr)
+    # await pepperd.handleLostClient(client.request, client.ws)
+    raise 
+  of Text:
+    debug("[pepperd] 'text' ws not implemented: ") #, client.peerAddr)
+  of Binary:
+    return (opcode, data)
+  of Ping:
+    debug("[pepperd] 'ping' ws not implemented: ") #, client.peerAddr)
+    raise
+  of Pong:
+    debug("[pepperd] 'pong' ws not implemented: ") #, client.peerAddr)
+    raise
+  of Cont:
+    debug("[pepperd] 'cont' ws not implemented: ") #, client.peerAddr)  
+    raise
+
+
 proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} = 
   let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
   let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
@@ -70,12 +100,20 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
   await sendBinary(slave.ws, firstLevelMsg)
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
+  
+  var helo = MsgReq()
+  helo.messageType = MessageType.MsgReq
+  helo.command = "ping"
+  await slave.send(helo)
   while true:
-    var helo = MsgReq()
-    helo.messageType = MessageType.MsgReq
-    helo.command = "ping"
-    await slave.send(helo)
-    
+    var 
+      opcode: Opcode
+      data: string
+    try:
+      (opcode, data) = await slave.recv()
+    except: 
+      break
+    echo "RECV:", opcode, "\n", data
     # var signature: string = ""
     # if not 
     # if slave.ws.sock.isClosed:
@@ -87,7 +125,7 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     # echo repr slave.ws.sock.getFd
     # await sendText(slave.ws, "FOO".repeat(1000))
     # # let (opcode, data) = await slave.ws.readData()
-    await sleepAsync(1000)
+    # await sleepAsync(1000)
 
 proc connectToMaster(slave: PepperSlave): Future[void] {.async.} = 
   var masterHost = slave.getMasterHost()
@@ -114,7 +152,7 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
     except:
       echo getCurrentExceptionMsg()
       echo("[slave] Could not connect to master: ", slave.getMasterHost)
-    await sleepAsync(5_000)
+      await sleepAsync(5_000)
 
 when isMainModule:
   var slave = newPepperSlave()

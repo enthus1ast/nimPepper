@@ -5,52 +5,13 @@ import logger
 import hashes
 import netfuncs
 import keymanager
-# import masterMessageHandlers
+import createenv
 
 proc hash(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
   h = h !& hash(ws.sock.getFd)
   # h = h !& hash
   return h
-
-proc genKeys(pepperd: Pepperd) = 
-  let seed = seed()
-  var keypair = createKeypair(seed)
-  pepperd.configPepperd.setSectionKey(
-    "master", 
-    "publicKey", 
-    encode(keypair.publicKey)
-  )
-  pepperd.configPepperd.setSectionKey(
-    "master", 
-    "privateKey", 
-    encode(keypair.privateKey)
-  )
-
-proc createEnvironment(pepperd: Pepperd) = 
-  let slaves = pepperd.pathPepperd / "slaves"
-  let unacceptedKeys = pepperd.pathPepperd / "unacceptedKeys"
-  let configDirPath = pepperd.pathPepperd / "config"
-  if not existsDir(slaves):
-    createDir(slaves)
-  pepperd.pathSlaves = slaves
-  if not existsDir(unacceptedKeys):
-    createDir(unacceptedKeys)
-  pepperd.pathUnacceptedKeys = unacceptedKeys
-  if not existsDir(configDirPath):
-    createDir(configDirPath)
-  pepperd.pathConfigDir = configDirPath
-  pepperd.pathConfigPepperd = pepperd.pathConfigDir / "masterconfig.ini"
-  if not existsFile(pepperd.pathConfigPepperd):
-    pepperd.configPepperd = newConfig()
-    pepperd.genKeys()
-    pepperd.configPepperd.setSectionKey("master", "httpport", "8989")
-    writeConfig(
-      pepperd.configPepperd,
-      pepperd.pathConfigPepperd
-    )
-  else:
-    pepperd.configPepperd = loadConfig(pepperd.pathConfigPepperd)
 
 proc newPepperd*(): Pepperd = 
   result = Pepperd()
@@ -71,6 +32,30 @@ proc handleLostClient(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): F
   if not request.client.isClosed():
     request.client.close()
 
+# proc authenticate(pepped: Pepperd, request: Request, ws: AsyncWebSocket): Client =
+#   ## when the connection authenticated, create a client, add it to the
+#   ## clients list and returns the client, if not raise exception
+
+proc send(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {.async.} =
+  let myPrivatKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+  let myPublicKey = pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
+  let receiverPublicKey =  client.publicKey #pepperd.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
+  let envelope = packEnvelope(msg)
+  var firstLevel: FirstLevel
+  if not packToFirstLevel(
+      myPrivatKey,
+      myPublicKey,
+      receiverPublicKey,
+      pack(envelope),
+      firstLevel
+      ):
+    echo "could not packToFirstLevel"
+    return
+  # echo firstLevel
+  var firstLevelMsg = pack(firstLevel)
+  echo $firstLevelMsg
+  await sendBinary(client.ws, firstLevelMsg)  
+
 proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
   var client = oclient
@@ -89,8 +74,6 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
   else:
     echo "ws known"
 
-  # echo firstLevel
-  # echo firstLevel
   let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
 
   var unzippedRaw: string = ""
@@ -135,12 +118,6 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
   # else:
   #   echo "could not handle message"
 
-# proc newClientInfo(request: Request, ws: AsyncWebSocket, peerAddr: Addr): ClientInfo =
-#   result = ClientInfo()
-#   result.request = request
-#   result.ws = ws
-#   result.peerAddr = request.client.getPeerAddr()
-
 proc recv(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} = 
   ## when everything is good returns true, else false is returned.
   ## when the client disconnects during recv. the client is removed from clients table
@@ -178,7 +155,6 @@ proc recv(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} 
     raise
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
-  # var cinfo = newClientInfo(request, ws, request.client.getPeerAddr)
   var client = Client(
         ws: ws, 
         request: request,
@@ -194,7 +170,6 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
     asyncCheck pepperd.handleWsMessage(client, data)
 
 proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
-  # echo request
   let (ws, error) = await verifyWebsocketRequest(request, "pepper")
   if ws.isNil:
     debug("[pepperd] http request from: ", request.client.getPeerAddr)
@@ -211,6 +186,16 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
     proc (request: Request): Future[void] = httpBaseCallback(pepperd, request)
   )
 
+proc debugSendToAll(pepperd: Pepperd): Future[void] {.async.} =
+  while true:
+    for client in pepperd.clients.values:
+      var msg = MsgReq()
+      msg.command = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"
+      echo "send to: ", $client
+      await pepperd.send(client, msg)
+    await sleepAsync(2250)
+
 when isMainModule:
   var pepperd = newPepperd()
+  asyncCheck pepperd.debugSendToAll()
   waitFor pepperd.run()

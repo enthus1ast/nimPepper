@@ -1,10 +1,6 @@
 import pepperdImports
 type
   Addr* = (string, Port)
-  # ClientInfo* = object
-  #   request: Request
-  #   ws: AsyncWebSocket
-  #   peerAddr: Addr
   Client* = object 
     ws*: AsyncWebSocket
     request*: Request
@@ -21,3 +17,4 @@ type
     configPepperd*: Config
     httpserver*: Asynchttpserver
     clients*: Clients
+    commanders*: Clients
