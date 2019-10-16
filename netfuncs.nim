@@ -189,20 +189,39 @@ proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool =
     return false
   return true
 
-template extractMessage*(envelope: MessageEnvelope): untyped = 
-  # var foo
-  # var msg: 
-  # var msg = 
-  case envelope.messageType
-  of MessageType.MsgLog:
-    var msg {.inject.}: MsgLog
-    unpack(envelope.msg, msg)
-    # msg
-    # return msg
-  of MessageType.MsgPing:
-    var msg {.inject.}: MsgPing
-    unpack(envelope.msg, msg)
-    # msg
-    # return msg
-  else:
-    echo "unknown message to extractMessage"
+
+proc unpack*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel, envelope: var MessageEnvelope): bool = 
+  ## unpacks and decrypts everything
+  if not extractFirstLevel(data, firstLevel):
+    info("[pepperd] could not extract firstLevel: ") #, client.peerAddr)
+    return false
+
+  var unzippedRaw: string = ""
+  if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
+    info("[pepperd] could not unpackFromFirstLevel") 
+    return false
+  echo "unzippedRaw: ", unzippedRaw
+
+  if not openEnvelope(unzippedRaw, envelope):
+    info("[pepperd] could not unpackEnvelope")
+    return false
+  
+  return true
+
+# template extractMessage*(envelope: MessageEnvelope): untyped = 
+#   # var foo
+#   # var msg: 
+#   # var msg = 
+#   case envelope.messageType
+#   of MessageType.MsgLog:
+#     var msg {.inject.}: MsgLog
+#     unpack(envelope.msg, msg)
+#     # msg
+#     # return msg
+#   of MessageType.MsgPing:
+#     var msg {.inject.}: MsgPing
+#     unpack(envelope.msg, msg)
+#     # msg
+#     # return msg
+#   else:
+#     echo "unknown message to extractMessage"

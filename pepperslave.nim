@@ -78,7 +78,6 @@ proc recv(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
     debug("[pepperd] 'cont' ws not implemented: ") #, client.peerAddr)  
     raise
 
-
 proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} = 
   let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
   let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
@@ -99,8 +98,8 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
   echo $firstLevelMsg
   await sendBinary(slave.ws, firstLevelMsg)
 
+
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
-  
   var helo = MsgReq()
   helo.messageType = MessageType.MsgReq
   helo.command = "ping"

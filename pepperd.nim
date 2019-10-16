@@ -60,11 +60,14 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
   debug("[pepperd] in handle ws client")
   var client = oclient
   client.peerAddr = client.request.client.getPeerAddr
-  var firstLevel: FirstLevel
-  if not extractFirstLevel(data, firstLevel):
-    info("[pepperd] could not extract firstLevel: ", client.peerAddr)
-    return
 
+  let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+  var envelope: MessageEnvelope
+  var firstLevel: FirstLevel
+  if not unpack(myPrivateKey, data, firstLevel, envelope):
+    debug("[pepperd] could not unpack the whole message")
+    return
+    
   if not pepperd.clients.contains(client.ws):
     client.publicKey = firstLevel.senderPublicKey
     pepperd.clients.add(
@@ -73,19 +76,6 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
     )
   else:
     echo "ws known"
-
-  let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-
-  var unzippedRaw: string = ""
-  if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
-    info("[pepperd] could not unpackFromFirstLevel") 
-    return
-  echo "unzippedRaw: ", unzippedRaw
-
-  var envelope: MessageEnvelope
-  if not openEnvelope(unzippedRaw, envelope):
-    info("[pepperd] could not unpackEnvelope")
-    return
 
   debug "Got: ", envelope.messageType
   case envelope.messageType
@@ -100,7 +90,6 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
     unpack(envelope.msg, res)
     echo res
     # if res.command == "ping":
-      
   of MessageType.MsgUntrusted:
     echo "client does not trust us"
   # extractMessage(envelope)
