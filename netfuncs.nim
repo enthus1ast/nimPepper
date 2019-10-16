@@ -1,6 +1,7 @@
 import pepperdImports
 import messages
 import logger
+import json
 
 proc genTo[T](str: string): T =
   if str.len != T.len:
@@ -34,6 +35,9 @@ proc extractFirstLevel*(data: string, firstLevel: var FirstLevel): bool =
   ## false otherwise
   try:
     unpack(data, firstLevel)
+    # let firstLevelJ = parseJson(data)
+    # echo firstLevelJ
+    # firstLevel = json.to(firstLevelJ, FirstLevel)
   except:
     echo "could not unpack"
     return false
@@ -143,7 +147,7 @@ proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, dat
     info("[pepperd] could not uncompress data!")
     return false
   return true
-  
+
 proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
     data: string, firstLevel: var FirstLevel): bool =
   ## compress, encrypt and signs a message

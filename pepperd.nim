@@ -101,6 +101,21 @@ proc handleWsMessage(pepperd: Pepperd, request: Request, ws: AsyncWebSocket, dat
     return
 
   debug "Got: ", envelope.messageType
+  case envelope.messageType
+  of MessageType.MsgReq:
+    echo "got a request"
+    var req: MsgReq
+    unpack(envelope.msg, req)
+    echo req
+  of MessageType.MsgRes:
+    echo "got a response"
+    var res: MsgRes
+    unpack(envelope.msg, res)
+    echo res
+    # if res.command == "ping":
+      
+  of MessageType.MsgUntrusted:
+    echo "client does not trust us"
   # extractMessage(envelope)
   # echo foo
   # echo msg

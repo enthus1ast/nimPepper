@@ -71,8 +71,9 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   while true:
-    var helo = MsgPing()
-    helo.messageType = MessageType.MsgPing
+    var helo = MsgReq()
+    helo.messageType = MessageType.MsgReq
+    helo.command = "ping"
     await slave.send(helo)
     
     # var signature: string = ""

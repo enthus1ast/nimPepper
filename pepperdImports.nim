@@ -11,7 +11,7 @@ import net
 import strutils
 import asyncnet
 import tables
-# import json
+import json
 import msgpack4nim
 # import msgpack2any
 import xxtea
@@ -31,7 +31,7 @@ export net
 export strutils
 export asyncnet
 export tables
-# export json
+export json
 export msgpack4nim
 # export msgpack2any
 export xxtea
