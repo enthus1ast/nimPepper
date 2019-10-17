@@ -41,7 +41,7 @@ type
     messageId*: string
     timestamp*: string
     senderName*: string
-    senderPublicKey*: string   
+    senderPublicKey*: PublicKey   
     command*: string
     params*: string 
   MsgRes* = object
@@ -51,5 +51,5 @@ type
     responseToId*: string
     timestamp*: string
     senderName*: string
-    senderPublicKey*: string  
+    senderPublicKey*: PublicKey  
     output*: string

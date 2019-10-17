@@ -1,0 +1,3 @@
+import hostname
+####
+export hostname

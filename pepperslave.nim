@@ -4,6 +4,7 @@ import logger
 import netfuncs
 import messages
 import json
+import pepperslaveImports
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
@@ -93,10 +94,19 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
       debug("[slave] could not unpack the whole message")
       raise
 
+proc myPublicKey(slave: PepperSlave): PublicKey =
+  return slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
+
+proc myPrivateKey(slave: PepperSlave): PrivateKey =
+  return slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
+
+proc masterPublicKey(slave: PepperSlave): PublicKey =
+  return slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
+
 proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} = 
-  let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
-  let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
-  let receiverPublicKey = slave.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
+  let myPrivatKey = slave.myPrivateKey()
+  let myPublicKey = slave.myPublicKey()
+  let receiverPublicKey = slave.masterPublicKey()
   let envelope = packEnvelope(msg)
   var firstLevel: FirstLevel
   if not packToFirstLevel(
@@ -115,7 +125,9 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   var helo = MsgReq()
   helo.messageType = MessageType.MsgReq
-  helo.command = "ping"
+  helo.command = "helo"
+  helo.senderName = hostname()
+  helo.senderPublicKey = slave.myPublicKey()
   await slave.send(helo)
   while true:
     var 

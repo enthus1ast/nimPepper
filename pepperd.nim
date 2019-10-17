@@ -32,10 +32,6 @@ proc handleLostClient(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): F
   if not request.client.isClosed():
     request.client.close()
 
-# proc authenticate(pepped: Pepperd, request: Request, ws: AsyncWebSocket): Client =
-#   ## when the connection authenticated, create a client, add it to the
-#   ## clients list and returns the client, if not raise exception
-
 proc send(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {.async.} =
   let myPrivatKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
   let myPublicKey = pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
@@ -104,19 +100,52 @@ proc recv(pepperd: Pepperd, client: Client): Future[tuple[firstLevel: FirstLevel
   if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
     debug("[pepperd] could not unpack the whole message")
     raise
-  
+
+proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[Client] {.async.} =
+  ## when the connection authenticated, create a client, add it to the
+  ## clients list and returns the client, if not raise exception
+  result = Client(
+    ws: ws, 
+    request: request,
+  )
+  var 
+    firstLevel: FirstLevel
+    envelope: MessageEnvelope 
+  try:
+    (firstLevel, envelope) = await pepperd.recv(result)
+  except:
+    echo "[authenticate] failure to recv in authenticate"
+    raise
+  result.publicKey = firstLevel.senderPublicKey
+  var req: MsgReq
+  case envelope.messageType
+  of MessageType.MsgReq:
+    echo "got a request"
+    try:
+      unpack(envelope.msg, req)
+    except:
+      echo "unpack failed"
+      raise
+    echo req
+  else:
+    echo "[authenticate] not a MessageType.MsgReq"
+    raise
+
+  if req.senderPublicKey != firstLevel.senderPublicKey:
+    echo "error senderPublicKey in packed msg is different that in unencrypted firstLeve"
+    raise
+
+  if req.senderName == "":
+    echo "erro senderName == \"\""
+    raise
+
+  # if pepperd.isUnaccepted()
 
 proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
   var client = oclient
   client.peerAddr = client.request.client.getPeerAddr
 
-  # let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-  # var envelope: MessageEnvelope
-  # var firstLevel: FirstLevel
-  # if not unpack(myPrivateKey, data, firstLevel, envelope):
-  #   debug("[pepperd] could not unpack the whole message")
-  #   return
   var 
     firstLevel: FirstLevel
     envelope: MessageEnvelope 
@@ -168,10 +197,12 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} 
 
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
-  var client = Client(
-        ws: ws, 
-        request: request,
-      )
+  var client: Client
+  try:  
+    client = await pepperd.authenticate(request, ws)
+  except:
+    echo "authenticate failed somehow"
+    return
   # while true:
     # var 
     #   opcode: Opcode
