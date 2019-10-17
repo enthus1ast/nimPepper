@@ -49,7 +49,7 @@ proc getMasterHost(slave: PepperSlave): string =
     slave.configSlave.getSectionValue("master", "port")
   ]
 
-proc recv(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
+proc recvData(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
   var 
     opcode: Opcode
     data: string
@@ -78,6 +78,21 @@ proc recv(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
     debug("[pepperd] 'cont' ws not implemented: ") #, client.peerAddr)  
     raise
 
+proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: MessageEnvelope]] {.async.} =
+    var 
+      opcode: Opcode
+      data: string
+    try:
+      (opcode, data) = await slave.recvData()
+    except: 
+      raise
+    # echo "RECV:", opcode, "\n", data
+  
+    let myPrivateKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
+    if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
+      debug("[slave] could not unpack the whole message")
+      raise
+
 proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} = 
   let myPrivatKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
   let myPublicKey = slave.configSlave.getSectionValue("slave", "publicKey").decode().toPublicKey
@@ -93,9 +108,7 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
       ):
     echo "could not packToFirstLevel"
     return
-  # echo firstLevel
   var firstLevelMsg = pack(firstLevel)
-  echo $firstLevelMsg
   await sendBinary(slave.ws, firstLevelMsg)
 
 
@@ -106,13 +119,15 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
   await slave.send(helo)
   while true:
     var 
-      opcode: Opcode
-      data: string
+      firstLevel: FirstLevel
+      envelope: MessageEnvelope 
     try:
-      (opcode, data) = await slave.recv()
-    except: 
+      (firstLevel, envelope) = await slave.recv()
+    except:
       break
-    echo "RECV:", opcode, "\n", data
+    echo firstLevel
+    echo envelope
+
     # var signature: string = ""
     # if not 
     # if slave.ws.sock.isClosed:

@@ -56,18 +56,77 @@ proc send(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {
   echo $firstLevelMsg
   await sendBinary(client.ws, firstLevelMsg)  
 
-proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[void] {.async.} =
+proc recvData(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} = 
+  ## when everything is good returns true, else false is returned.
+  ## when the client disconnects during recv. the client is removed from clients table
+  var 
+    opcode: Opcode
+    data: string
+  try:
+    (opcode, data) = await client.ws.readData()
+  except:
+    debug("[pepperd] ws connection interrupted: ", client.request.client.getPeerAddr)
+    await pepperd.handleLostClient(client.request, client.ws)
+    raise
+  debug("[pepperd] got ws frame from: $# opcode: $# \nframe:\n$#" % [
+      $client.peerAddr,
+      $opcode,
+      data
+  ])  
+  case opcode
+  of Close:
+    debug("[pepperd] ws connection closed: ", client.peerAddr)
+    await pepperd.handleLostClient(client.request, client.ws)
+    raise 
+  of Text:
+    debug("[pepperd] 'text' ws not implemented: ", client.peerAddr)
+  of Binary:
+    return (opcode, data)
+  of Ping:
+    debug("[pepperd] 'ping' ws not implemented: ", client.peerAddr)
+    raise
+  of Pong:
+    debug("[pepperd] 'pong' ws not implemented: ", client.peerAddr)
+    raise
+  of Cont:
+    debug("[pepperd] 'cont' ws not implemented: ", client.peerAddr)  
+    raise
+
+proc recv(pepperd: Pepperd, client: Client): Future[tuple[firstLevel: FirstLevel, envelope: MessageEnvelope]] {.async.} =
+  var 
+    opcode: Opcode
+    data: string
+  try:
+    (opcode, data) = await pepperd.recvData(client)
+  except: 
+    raise
+  let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+  if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
+    debug("[pepperd] could not unpack the whole message")
+    raise
+  
+
+proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
   var client = oclient
   client.peerAddr = client.request.client.getPeerAddr
 
-  let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-  var envelope: MessageEnvelope
-  var firstLevel: FirstLevel
-  if not unpack(myPrivateKey, data, firstLevel, envelope):
-    debug("[pepperd] could not unpack the whole message")
-    return
-    
+  # let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+  # var envelope: MessageEnvelope
+  # var firstLevel: FirstLevel
+  # if not unpack(myPrivateKey, data, firstLevel, envelope):
+  #   debug("[pepperd] could not unpack the whole message")
+  #   return
+  var 
+    firstLevel: FirstLevel
+    envelope: MessageEnvelope 
+  try:
+    (firstLevel, envelope) = await pepperd.recv(client)
+  except:
+    return    
+  
+  client.publicKey = firstLevel.senderPublicKey
+
   if not pepperd.clients.contains(client.ws):
     client.publicKey = firstLevel.senderPublicKey
     pepperd.clients.add(
@@ -107,56 +166,21 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client, data: string): Future[vo
   # else:
   #   echo "could not handle message"
 
-proc recv(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} = 
-  ## when everything is good returns true, else false is returned.
-  ## when the client disconnects during recv. the client is removed from clients table
-  var 
-    opcode: Opcode
-    data: string
-  try:
-    (opcode, data) = await client.ws.readData()
-  except:
-    debug("[pepperd] ws connection interrupted: ", client.request.client.getPeerAddr)
-    await pepperd.handleLostClient(client.request, client.ws)
-    raise
-  debug("[pepperd] got ws frame from: $# opcode: $# \nframe:\n$#" % [
-      $client.peerAddr,
-      $opcode,
-      data
-  ])  
-  case opcode
-  of Close:
-    debug("[pepperd] ws connection closed: ", client.peerAddr)
-    await pepperd.handleLostClient(client.request, client.ws)
-    raise 
-  of Text:
-    debug("[pepperd] 'text' ws not implemented: ", client.peerAddr)
-  of Binary:
-    return (opcode, data)
-  of Ping:
-    debug("[pepperd] 'ping' ws not implemented: ", client.peerAddr)
-    raise
-  of Pong:
-    debug("[pepperd] 'pong' ws not implemented: ", client.peerAddr)
-    raise
-  of Cont:
-    debug("[pepperd] 'cont' ws not implemented: ", client.peerAddr)  
-    raise
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   var client = Client(
         ws: ws, 
         request: request,
       )
-  while true:
-    var 
-      opcode: Opcode
-      data: string
-    try:
-      (opcode, data) = await pepperd.recv(client)
-    except: 
-      break
-    asyncCheck pepperd.handleWsMessage(client, data)
+  # while true:
+    # var 
+    #   opcode: Opcode
+    #   data: string
+    # try:
+    #   (opcode, data) = await pepperd.recvData(client)
+    # except: 
+    #   break
+  asyncCheck pepperd.handleWsMessage(client)
 
 proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   let (ws, error) = await verifyWebsocketRequest(request, "pepper")
@@ -186,5 +210,5 @@ proc debugSendToAll(pepperd: Pepperd): Future[void] {.async.} =
 
 when isMainModule:
   var pepperd = newPepperd()
-  asyncCheck pepperd.debugSendToAll()
+  # asyncCheck pepperd.debugSendToAll()
   waitFor pepperd.run()

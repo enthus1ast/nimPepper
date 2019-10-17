@@ -189,7 +189,6 @@ proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool =
     return false
   return true
 
-
 proc unpack*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel, envelope: var MessageEnvelope): bool = 
   ## unpacks and decrypts everything
   if not extractFirstLevel(data, firstLevel):
