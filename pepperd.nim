@@ -49,7 +49,7 @@ proc send(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {
     return
   # echo firstLevel
   var firstLevelMsg = pack(firstLevel)
-  echo $firstLevelMsg
+  # echo $firstLevelMsg
   await sendBinary(client.ws, firstLevelMsg)  
 
 proc recvData(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} = 
@@ -64,11 +64,11 @@ proc recvData(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.asyn
     debug("[pepperd] ws connection interrupted: ", client.request.client.getPeerAddr)
     await pepperd.handleLostClient(client.request, client.ws)
     raise
-  debug("[pepperd] got ws frame from: $# opcode: $# \nframe:\n$#" % [
-      $client.peerAddr,
-      $opcode,
-      data
-  ])  
+  # debug("[pepperd] got ws frame from: $# opcode: $# \nframe:\n$#" % [
+  #     $client.peerAddr,
+  #     $opcode,
+  #     data
+  # ])  
   case opcode
   of Close:
     debug("[pepperd] ws connection closed: ", client.peerAddr)
@@ -139,7 +139,18 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     echo "erro senderName == \"\""
     raise
 
-  # if pepperd.isUnaccepted()
+  echo "create files:"
+  if pepperd.isUnaccepted(req.senderName, req.senderPublicKey.toString):
+    echo "client is unaccepted"
+    raise
+  elif pepperd.isAccepted(req.senderName, req.senderPublicKey.toString):
+    echo "[+] client is accepted, proceed"
+    return result
+  else:
+    echo "client is unknown yet, create an unnacepted file."
+    pepperd.createUnaccepted(req.senderName, req.senderPublicKey.toString)
+    raise
+  echo "reaced end... (not possible....)"
 
 proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
