@@ -33,6 +33,7 @@ proc createEnvironment*(pepperd: Pepperd) =
     pepperd.configPepperd = newConfig()
     pepperd.genKeys()
     pepperd.configPepperd.setSectionKey("master", "httpport", "8989")
+    pepperd.configPepperd.setSectionKey("master", "adminhttpport", "9999")
     writeConfig(
       pepperd.configPepperd,
       pepperd.pathConfigPepperd

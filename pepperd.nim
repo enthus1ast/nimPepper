@@ -19,9 +19,14 @@ proc newPepperd*(): Pepperd =
   result.createEnvironment()
   result.configPepperd = loadConfig(result.pathConfigPepperd)
   result.httpserver = newAsyncHttpServer()
+  result.adminhttpserver = newAsyncHttpServer()
 
 proc httpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   await request.respond(Http400, "http not implemented")
+  request.client.close()
+
+proc adminHttpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
+  await request.respond(Http400, "admin http not implemented")
   request.client.close()
 
 proc handleLostClient(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
@@ -47,9 +52,7 @@ proc send(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {
       ):
     echo "could not packToFirstLevel"
     return
-  # echo firstLevel
   var firstLevelMsg = pack(firstLevel)
-  # echo $firstLevelMsg
   await sendBinary(client.ws, firstLevelMsg)  
 
 proc recvData(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.async.} = 
@@ -139,12 +142,24 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     echo "erro senderName == \"\""
     raise
 
+  result.name = req.senderName
+
   echo "create files:"
   if pepperd.isUnaccepted(req.senderName, req.senderPublicKey.toString):
     echo "client is unaccepted"
     raise
   elif pepperd.isAccepted(req.senderName, req.senderPublicKey.toString):
     echo "[+] client is accepted, proceed"
+
+    ## Adding client to the clients table
+    if not pepperd.clients.contains(result.ws):
+      pepperd.clients.add(
+        result.ws,
+        result
+      )
+    else:
+      echo "ws known"
+
     return result
   else:
     echo "client is unknown yet, create an unnacepted file."
@@ -191,20 +206,6 @@ proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} 
     # if res.command == "ping":
   of MessageType.MsgUntrusted:
     echo "client does not trust us"
-  # extractMessage(envelope)
-  # echo foo
-  # echo msg
-  ## vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  ## maybe check if client with this publicKey is known
-  ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  # let msgMap = envelope.msg.toAny
-  # echo msgMap
-  # if pepperdfirstLevel.senderPublicKey.
-  # case envelope.messageType
-  # of MessageType.MsgLog:
-  #   await masterHandleLog()
-  # else:
-  #   echo "could not handle message"
 
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
@@ -214,6 +215,7 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
   except:
     echo "authenticate failed somehow"
     return
+
   # while true:
     # var 
     #   opcode: Opcode
@@ -224,6 +226,64 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
     #   break
   asyncCheck pepperd.handleWsMessage(client)
 
+iterator targets(pepperd: Pepperd, targets: string): Client =
+  echo "dummy iterator targets"
+  echo repr pepperd.clients
+  for client in pepperd.clients.values:
+    yield client
+
+proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
+  var adminClient = Client(
+    request: request,
+    ws: ws
+  )
+  var 
+    opcode: Opcode
+    data: string
+  try:
+    (opcode, data) = await pepperd.recvData(adminClient)
+  except:
+    echo getCurrentExceptionMsg()
+    return
+  
+  echo "get admin data:", data
+  var adminReq = MsgAdminReq()
+  unpack(data, adminReq)
+  for target in pepperd.targets(adminReq.targets):
+    # echosend to client
+    echo target.name
+    var adminRes = MsgAdminRes()
+    adminRes.target = $target.name
+    # adminRes.output = "DUMMY"
+    let adminResStr = pack(adminRes)
+    echo "adminResStr:", adminResStr
+    echo "adminResStL:", adminResStr.len
+    echo adminResStr.encode
+
+    var adminRes2 = MsgAdminRes()
+    unpack(adminResStr, adminRes2)
+    echo adminRes2
+
+    await adminClient.ws.sendBinary(adminResStr)
+  await sleepAsync(2000)
+  await adminClient.ws.close()
+  
+  # var client: Client
+  # try:  
+  #   client = await pepperd.authenticate(request, ws)
+  # except:
+  #   echo "authenticate failed somehow"
+  #   return
+  # while true:
+    # var 
+    #   opcode: Opcode
+    #   data: string
+    # try:
+    #   (opcode, data) = await pepperd.recvData(client)
+    # except: 
+    #   break
+  # asyncCheck pepperd.handleWsMessage(client)
+
 proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   let (ws, error) = await verifyWebsocketRequest(request, "pepper")
   if ws.isNil:
@@ -233,9 +293,26 @@ proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.
     debug("[pepperd] ws negotiation from: ", request.client.getPeerAddr)
     await wsCallback(pepperd, request, ws)
 
+proc adminHttpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
+  let (ws, error) = await verifyWebsocketRequest(request, "pepperadmin")
+  if ws.isNil:
+    debug("[pepperd] admin http request from: ", request.client.getPeerAddr)
+    await adminHttpCallback(pepperd, request)
+  else:
+    debug("[pepperd] admin ws negotiation from: ", request.client.getPeerAddr)
+    await adminWsCallback(pepperd, request, ws)
+
+
 proc run(pepperd: Pepperd): Future[void] {.async.} = 
   let port = Port(pepperd.configPepperd.getSectionValue("master", "httpport").parseInt.Port)
+  let adminport = Port(pepperd.configPepperd.getSectionValue("master", "adminhttpport").parseInt.Port)
   info("[pepperd] binding http to: " & $port)
+  info("[pepperd] binding admin http to: " & $adminport)
+  asyncCheck pepperd.adminhttpserver.serve(
+    adminport,
+    proc (request: Request): Future[void] = adminHttpBaseCallback(pepperd, request),
+    address = "127.0.0.1"
+  )
   await pepperd.httpserver.serve(
     port,
     proc (request: Request): Future[void] = httpBaseCallback(pepperd, request)

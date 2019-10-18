@@ -4,11 +4,11 @@ tl;dr
 pepper is a remote code execution system to control multiple computers
 at once, from a master computer. The system consists of 3 core components:
 
-1. The master (pepperd)
+1. The master (pepperd):
   Slaves connect to the master, the master sends commands to the slaves.
-2. The slaves (pepperslave)
+2. The slaves (pepperslave):
   Slaves run on computers that should be controlled. Slaves connect to the master and waits for commands.
-3. The control tool (pepper)
+3. The control tool (pepper):
   The control tool is used by administrators to send commands through the master to the 
   slaves.
 

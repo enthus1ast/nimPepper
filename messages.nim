@@ -53,3 +53,10 @@ type
     senderName*: string
     senderPublicKey*: PublicKey  
     output*: string
+  MsgAdminReq* = object
+    targets*: string
+    commands*: string
+    params*: string
+  MsgAdminRes* = object
+    target*: string
+    output*: string

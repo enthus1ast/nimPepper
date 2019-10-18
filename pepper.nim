@@ -1,6 +1,38 @@
-import parseopt, os, strscans, strutils, base64, terminal
-import pepperdImports, typesPepperd, pepperd, keymanager
+import parseopt, os, strscans, strutils, base64, terminal, sequtils
+import pepperdImports, typesPepperd, pepperd, keymanager, messages, msgpack4nim
 # var opts = initOptParser()
+
+
+proc call(targets, commands: string) =
+  let ws = waitFor newAsyncWebsocketClient("localhost", Port(9999),
+  path = "/", protocols = @["pepperadmin"])
+
+  var req = MsgAdminReq()
+  req.targets = targets
+  req.commands = commands
+  var reqs = pack(req)
+  waitFor ws.sendBinary(reqs)
+
+  var 
+    opcode: Opcode
+    data: string
+  
+  while true:
+    try:
+      (opcode, data) = waitFor ws.readData()
+    except:
+      # echo getCurrentExceptionMsg()
+      break
+    if opcode != Binary: continue
+    # echo "OPCODE:", opcode
+    # echo "DATA:", data
+    # echo "DATL:", data.len
+    # echo data.encode()
+
+    var adminRes = MsgAdminRes()
+    unpack(data, adminRes)
+    echo adminRes
+  waitFor ws.close()
 
 var pepd = newPepperd()
 
@@ -36,9 +68,15 @@ proc help() =
 var
   ## vars that are set by the command line.
   slaveName: string
+  targets: string
+  command: string
 
 # echo scanf("keys accept foo", "keys accept $w", key)
 # echo key
+
+# if getParamStr().startsWith("\""):
+#   echo "command to clients"
+#   quit()
 
 template chk(params, pattern: string, doc: string = "", results: untyped = void ): bool = 
   regs.add( (pattern, doc) ) 
@@ -78,6 +116,19 @@ elif chk(params, "keys unaccept $w", "unaccept the key by its name, leaves slave
   echo "UNACCEPT: ", slaveName
   pepd.unacept(slaveName)
   setForegroundColor(fgDefault)
+
+# elif chk(params, "call $+\"", "call commands on the slaves", targets):
+elif chk(params, "call", "call commands on hosts eg: call \"targetselector\" \"commands to send\" "):
+  var p = initOptParser()
+  echo p
+  var cmds = toSeq(p.getopt)
+  targets = cmds[1].key
+  command = cmds[2].key
+  echo cmds
+  echo "call to slaves"
+  echo "targets:", targets
+  echo "command:", command
+  call(targets, command)
 
 
 elif chk(params, "help", "print this help"):

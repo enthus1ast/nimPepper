@@ -16,5 +16,6 @@ type
     pathConfigPepperd*: string # the pepperd config
     configPepperd*: Config
     httpserver*: Asynchttpserver
+    adminhttpserver*: Asynchttpserver
     clients*: Clients
     commanders*: Clients

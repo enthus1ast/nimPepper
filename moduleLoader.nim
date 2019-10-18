@@ -1,16 +1,16 @@
 # import tables
 import pepperslaveImports
 import json, dynlib
-# import pepperslave
 import typesPepperSlave
 import asyncdispatch, tables
 
 type
+  ## The procedure modules must implement
   SlaveCommandFunc[T] = proc(obj: T, params: JsonNode = nil): Future[JsonNode]
-  # BoundCommand = 
+  
+  ## The obj that loads, the modules 
   ModLoader[T] = ref object
     registeredCommands: Table[string, SlaveCommandFunc[T]]
-
 
 proc newModLoader[T](): ModLoader[T] =
   result = ModLoader[T]()
@@ -25,16 +25,14 @@ proc call[T](loader: ModLoader, obj: T, name: string, params: JsonNode = nil): F
   result = await loader.registeredCommands[name](params)
   echo "[module] ^^^ command calling done ^^^ "
 
-# proc registerCommand[T](loader: ModLoader, obj: T, name: string, commandFunc: SlaveCommandFunc, doc: string = "") = 
 proc registerCommand(loader: ModLoader, name: string, commandFunc: SlaveCommandFunc, doc: string = "") = 
   loader.registeredCommands.add(name, commandFunc)
 
 proc loadDll(loader: ModLoader, path: string) = 
   let lib = loadLib(path)
-  
+
 
 when isMainModule:
-
   type SomeObj = object
     foo: string
   var dummyFunc: SlaveCommandFunc[SomeObj] = proc(obj: SomeObj, params: JsonNode): Future[JsonNode] {.async.} =
