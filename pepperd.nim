@@ -150,7 +150,7 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     echo "client is unknown yet, create an unnacepted file."
     pepperd.createUnaccepted(req.senderName, req.senderPublicKey.toString)
     raise
-  echo "reaced end... (not possible....)"
+  echo "[BUG] reached the end... (not possible....)"
 
 proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
