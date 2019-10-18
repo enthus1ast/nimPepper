@@ -265,7 +265,7 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     echo adminRes2
 
     await adminClient.ws.sendBinary(adminResStr)
-  await sleepAsync(2000)
+  # await sleepAsync(2000)
   await adminClient.ws.close()
   
   # var client: Client

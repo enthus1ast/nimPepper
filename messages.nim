@@ -56,7 +56,7 @@ type
   MsgAdminReq* = object
     targets*: string
     commands*: string
-    params*: string
+    commandParams*: string
   MsgAdminRes* = object
     target*: string
     output*: string

@@ -3,13 +3,14 @@ import pepperdImports, typesPepperd, pepperd, keymanager, messages, msgpack4nim
 # var opts = initOptParser()
 
 
-proc call(targets, commands: string) =
+iterator call(targets, commands, commandParams: string): MsgAdminRes =
   let ws = waitFor newAsyncWebsocketClient("localhost", Port(9999),
   path = "/", protocols = @["pepperadmin"])
 
   var req = MsgAdminReq()
   req.targets = targets
   req.commands = commands
+  req.commandParams = commandParams
   var reqs = pack(req)
   waitFor ws.sendBinary(reqs)
 
@@ -31,7 +32,9 @@ proc call(targets, commands: string) =
 
     var adminRes = MsgAdminRes()
     unpack(data, adminRes)
-    echo adminRes
+    # echo adminRes
+    yield adminRes
+
   waitFor ws.close()
 
 var pepd = newPepperd()
@@ -70,6 +73,7 @@ var
   slaveName: string
   targets: string
   command: string
+  commandParams: string
 
 # echo scanf("keys accept foo", "keys accept $w", key)
 # echo key
@@ -120,15 +124,22 @@ elif chk(params, "keys unaccept $w", "unaccept the key by its name, leaves slave
 # elif chk(params, "call $+\"", "call commands on the slaves", targets):
 elif chk(params, "call", "call commands on hosts eg: call \"targetselector\" \"commands to send\" "):
   var p = initOptParser()
-  echo p
+  # echo p
   var cmds = toSeq(p.getopt)
   targets = cmds[1].key
   command = cmds[2].key
-  echo cmds
-  echo "call to slaves"
-  echo "targets:", targets
-  echo "command:", command
-  call(targets, command)
+  commandParams = cmds[3].key
+  # echo cmds
+  # echo "call to slaves"
+  # echo "targets:", targets
+  # echo "command:", command
+  for res in call(targets, command, commandParams):
+    setForegroundColor(fgGreen)
+    echo "#################"
+    echo res.target
+    setForegroundColor(fgDefault)
+    echo res.output
+
 
 
 elif chk(params, "help", "print this help"):
