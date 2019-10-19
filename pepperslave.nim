@@ -5,6 +5,7 @@ import netfuncs
 import messages
 import json
 import pepperslaveImports
+import modules.slaveModules
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
@@ -43,6 +44,7 @@ proc newPepperSlave(): PepperSlave =
   result = PepperSlave()
   result.pathPepperSlave = getCurrentDir()
   result.createEnvironment()
+  result.modLoader = ModLoader[PepperSlave]()
 
 proc getMasterHost(slave: PepperSlave): string = 
   return "$#:$#" % [
@@ -140,6 +142,11 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     echo firstLevel
     echo envelope
 
+    var msgReq = MsgReq()
+    unpack(envelope.msg, msgReq)
+
+    await slave.modLoader.call(slave, msgReq.command, msgReq.params)
+
     # var signature: string = ""
     # if not 
     # if slave.ws.sock.isClosed:
@@ -182,6 +189,9 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
 
 when isMainModule:
   var slave = newPepperSlave()
+  register(slave.modLoader, slave)
+  echo "Available commands:"
+  echo slave.modLoader.listCommands().join("\n")
   # asyncCheck slave.ping()
   asyncCheck slave.run()
   runForever()

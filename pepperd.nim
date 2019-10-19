@@ -7,6 +7,13 @@ import netfuncs
 import keymanager
 import createenv
 
+proc myPublicKey(pepperd: Pepperd): PublicKey =
+  return pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
+
+proc myPrivateKey(pepperd: Pepperd): PrivateKey =
+  return pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+
+
 proc hash(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
   h = h !& hash(ws.sock.getFd)
@@ -249,20 +256,43 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
   echo "get admin data:", data
   var adminReq = MsgAdminReq()
   unpack(data, adminReq)
+
   for target in pepperd.targets(adminReq.targets):
-    # echosend to client
+    # echo send to client
     echo target.name
+
+    var msgReq = MsgReq()
+    msgReq.command = adminReq.commands
+    msgReq.params = adminReq.commandParams
+    msgReq.senderPublicKey = pepperd.myPublicKey()
+
+    await pepperd.send(target, msgReq)
+
+
+    var 
+      firstLevel: FirstLevel
+      envelope: MessageEnvelope 
+    try:
+      (firstLevel, envelope) = await pepperd.recv(target)
+    except:
+      echo "[pepeprd] failure to recv in in call to: ", target
+      # raise
+
+    var res: MsgRes
+    unpack(envelope.msg, res)
+
+
     var adminRes = MsgAdminRes()
     adminRes.target = $target.name
-    # adminRes.output = "DUMMY"
+    adminRes.output = res.output
     let adminResStr = pack(adminRes)
     echo "adminResStr:", adminResStr
     echo "adminResStL:", adminResStr.len
     echo adminResStr.encode
 
-    var adminRes2 = MsgAdminRes()
-    unpack(adminResStr, adminRes2)
-    echo adminRes2
+    # var adminRes2 = MsgAdminRes()
+    # unpack(adminResStr, adminRes2)
+    # echo adminRes2
 
     await adminClient.ws.sendBinary(adminResStr)
   # await sleepAsync(2000)
