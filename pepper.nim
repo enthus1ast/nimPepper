@@ -24,7 +24,9 @@ iterator call(targets, commands, commandParams: string): MsgAdminRes =
     except:
       # echo getCurrentExceptionMsg()
       break
-    if opcode != Binary: continue
+    if opcode != Binary: 
+      echo "not binary"
+      continue
     # echo "OPCODE:", opcode
     # echo "DATA:", data
     # echo "DATL:", data.len
@@ -124,21 +126,16 @@ elif chk(params, "keys unaccept $w", "unaccept the key by its name, leaves slave
 # elif chk(params, "call $+\"", "call commands on the slaves", targets):
 elif chk(params, "call", "call commands on hosts eg: call \"targetselector\" \"commands to send\" "):
   var p = initOptParser()
-  # echo p
   var cmds = toSeq(p.getopt)
   targets = cmds[1].key
   command = cmds[2].key
   commandParams = cmds[3].key
-  # echo cmds
-  # echo "call to slaves"
-  # echo "targets:", targets
-  # echo "command:", command
   for res in call(targets, command, commandParams):
     setForegroundColor(fgGreen)
     echo "#################"
     echo res.target
     setForegroundColor(fgDefault)
-    echo res.output
+    echo parseJson(res.output)["outp"].getStr()
 
 
 

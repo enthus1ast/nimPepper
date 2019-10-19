@@ -136,7 +136,6 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     except:
       echo "unpack failed"
       raise
-    echo req
   else:
     echo "[authenticate] not a MessageType.MsgReq"
     raise
@@ -153,7 +152,8 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
 
   echo "create files:"
   if pepperd.isUnaccepted(req.senderName, req.senderPublicKey.toString):
-    echo "client is unaccepted"
+    echo "client is unaccepted, closing"
+    await result.ws.close()
     raise
   elif pepperd.isAccepted(req.senderName, req.senderPublicKey.toString):
     echo "[+] client is accepted, proceed"
@@ -176,43 +176,43 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
 
 proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
-  var client = oclient
-  client.peerAddr = client.request.client.getPeerAddr
+  # var client = oclient
+  # client.peerAddr = client.request.client.getPeerAddr
 
-  var 
-    firstLevel: FirstLevel
-    envelope: MessageEnvelope 
-  try:
-    (firstLevel, envelope) = await pepperd.recv(client)
-  except:
-    return    
+  # var 
+  #   firstLevel: FirstLevel
+  #   envelope: MessageEnvelope 
+  # try:
+  #   (firstLevel, envelope) = await pepperd.recv(client)
+  # except:
+  #   return    
   
-  client.publicKey = firstLevel.senderPublicKey
+  # client.publicKey = firstLevel.senderPublicKey
 
-  if not pepperd.clients.contains(client.ws):
-    client.publicKey = firstLevel.senderPublicKey
-    pepperd.clients.add(
-      client.ws,
-      client
-    )
-  else:
-    echo "ws known"
+  # if not pepperd.clients.contains(client.ws):
+  #   client.publicKey = firstLevel.senderPublicKey
+  #   pepperd.clients.add(
+  #     client.ws,
+  #     client
+  #   )
+  # else:
+  #   echo "ws known"
 
-  debug "Got: ", envelope.messageType
-  case envelope.messageType
-  of MessageType.MsgReq:
-    echo "got a request"
-    var req: MsgReq
-    unpack(envelope.msg, req)
-    echo req
-  of MessageType.MsgRes:
-    echo "got a response"
-    var res: MsgRes
-    unpack(envelope.msg, res)
-    echo res
-    # if res.command == "ping":
-  of MessageType.MsgUntrusted:
-    echo "client does not trust us"
+  # debug "Got: ", envelope.messageType
+  # case envelope.messageType
+  # of MessageType.MsgReq:
+  #   echo "got a request"
+  #   var req: MsgReq
+  #   unpack(envelope.msg, req)
+  #   echo req
+  # of MessageType.MsgRes:
+  #   echo "got a response"
+  #   var res: MsgRes
+  #   unpack(envelope.msg, res)
+  #   echo res
+  #   # if res.command == "ping":
+  # of MessageType.MsgUntrusted:
+  #   echo "client does not trust us"
 
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
@@ -235,7 +235,7 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
 
 iterator targets(pepperd: Pepperd, targets: string): Client =
   echo "dummy iterator targets"
-  echo repr pepperd.clients
+  # echo repr pepperd.clients
   for client in pepperd.clients.values:
     yield client
 
@@ -266,7 +266,12 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     msgReq.params = adminReq.commandParams
     msgReq.senderPublicKey = pepperd.myPublicKey()
 
-    await pepperd.send(target, msgReq)
+    try:
+      await pepperd.send(target, msgReq)
+    except:
+      echo getCurrentExceptionMsg()
+      continue
+      
 
 
     var 
@@ -275,8 +280,10 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     try:
       (firstLevel, envelope) = await pepperd.recv(target)
     except:
+      echo getCurrentExceptionMsg()
       echo "[pepeprd] failure to recv in in call to: ", target
       # raise
+      continue
 
     var res: MsgRes
     unpack(envelope.msg, res)
@@ -286,16 +293,22 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     adminRes.target = $target.name
     adminRes.output = res.output
     let adminResStr = pack(adminRes)
-    echo "adminResStr:", adminResStr
-    echo "adminResStL:", adminResStr.len
-    echo adminResStr.encode
+    # echo "adminResStr:", adminResStr
+    # echo "adminResStL:", adminResStr.len
+    # echo adminResStr.encode
 
     # var adminRes2 = MsgAdminRes()
     # unpack(adminResStr, adminRes2)
     # echo adminRes2
-
-    await adminClient.ws.sendBinary(adminResStr)
+    echo "going to send:", adminResStr
+    try:
+      await adminClient.ws.sendBinary(adminResStr)
+    except:
+      echo getCurrentExceptionMsg()
+      continue
+    echo "sending done..."
   # await sleepAsync(2000)
+  echo "closing"
   await adminClient.ws.close()
   
   # var client: Client
@@ -348,14 +361,14 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
     proc (request: Request): Future[void] = httpBaseCallback(pepperd, request)
   )
 
-proc debugSendToAll(pepperd: Pepperd): Future[void] {.async.} =
-  while true:
-    for client in pepperd.clients.values:
-      var msg = MsgReq()
-      msg.command = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"
-      echo "send to: ", $client
-      await pepperd.send(client, msg)
-    await sleepAsync(2250)
+# proc debugSendToAll(pepperd: Pepperd): Future[void] {.async.} =
+#   while true:
+#     for client in pepperd.clients.values:
+#       var msg = MsgReq()
+#       msg.command = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"
+#       echo "send to: ", $client
+#       await pepperd.send(client, msg)
+#     await sleepAsync(2250)
 
 when isMainModule:
   var pepperd = newPepperd()

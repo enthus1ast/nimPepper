@@ -131,6 +131,7 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
   helo.senderName = hostname()
   helo.senderPublicKey = slave.myPublicKey()
   await slave.send(helo)
+
   while true:
     var 
       firstLevel: FirstLevel
@@ -145,8 +146,14 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
 
-    await slave.modLoader.call(slave, msgReq.command, msgReq.params)
+    let outp = await slave.modLoader.call(slave, msgReq.command, msgReq.params)
 
+    var msgRes = MsgRes()
+    msgRes.senderName = hostname()
+    msgRes.senderPublicKey = slave.myPublicKey()
+    msgRes.output = $ outp
+    echo "Going to send"
+    await slave.send(msgRes)
     # var signature: string = ""
     # if not 
     # if slave.ws.sock.isClosed:
@@ -185,7 +192,7 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
     except:
       echo getCurrentExceptionMsg()
       echo("[slave] Could not connect to master: ", slave.getMasterHost)
-      await sleepAsync(5_000)
+    await sleepAsync(5_000)
 
 when isMainModule:
   var slave = newPepperSlave()
