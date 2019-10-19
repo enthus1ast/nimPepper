@@ -12,6 +12,11 @@ Recent
 - multiple clients with the same name can connect
   - enforce different name?
 
+- client that blocks forever also blocks master forever
+  - timeout on receive?
+
+- modules should parse their params with parseopt 
+  (or even cligen) and inform the master about misuse
 
 Resolved
 --------

@@ -236,8 +236,10 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
 iterator targets(pepperd: Pepperd, targets: string): Client =
   echo "dummy iterator targets"
   # echo repr pepperd.clients
+  var pattern = targets.glob()
   for client in pepperd.clients.values:
-    yield client
+    if client.name.matches(pattern):
+      yield client
 
 proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   var adminClient = Client(

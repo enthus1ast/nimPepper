@@ -17,6 +17,7 @@ import msgpack4nim
 import xxtea
 import nativesockets
 import random
+import glob
 # -----------
 export parsecfg
 export os
@@ -37,3 +38,4 @@ export msgpack4nim
 export xxtea
 export nativesockets
 export random
+export glob
