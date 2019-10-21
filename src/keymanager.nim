@@ -43,6 +43,11 @@ proc getAccepted*(pepperd: Pepperd): seq[SlaveForOutput] =
       publicKey: $readFile(path)
     ))
 
+proc clearUnaccepted*(pepperd: Pepperd) =
+  var globstr = pepperd.pathUnacceptedKeys / "*.pubkey"
+  for path in walkFiles(globstr):
+    removeFile(path)
+
 proc accept*(pepperd: Pepperd, slaveName: string) = 
   ## creates a slave/%slavename% folder and moves over the pubkey
   var source = pepperd.pathUnacceptedKeys / slaveName & ".pubkey"

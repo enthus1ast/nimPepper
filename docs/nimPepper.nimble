@@ -19,3 +19,4 @@ requires "glob"
 requires "miniz"
 requires "websocket"
 requires "ed25519"
+requires "illwill" # for "slaves online" command

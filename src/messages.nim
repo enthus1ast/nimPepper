@@ -60,3 +60,10 @@ type
   MsgAdminRes* = object
     target*: string
     output*: string
+
+  ## Used to inform pepper of online clients
+  ClientInfo* = object
+    name*: string
+    ip*: string
+    online*: bool
+    publicKey*: string
