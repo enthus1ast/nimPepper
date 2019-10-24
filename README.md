@@ -116,6 +116,7 @@ slave: compile modules into the slave
 slave: load modules on runtime
 --------------------------------------
 
+<b>WARN loader and modules must be build the same! both must be release OR both must be debug build</b>
 
 test ws
 ======

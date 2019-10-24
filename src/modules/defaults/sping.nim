@@ -1,9 +1,12 @@
-import ../../typesModule
+import ../../typesModuleSlave
 import ../../typesPepperSlave
 import ../../moduleLoader
 
-var cmdPing*: SlaveCommandFunc[PepperSlave] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async.} =
+# var module* {.exportc.} = newSlaveModule("defaults")
+var modsping* {.exportc.} = newSlaveModule("defaults")
+
+modsping.boundCommands["ping"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return %* {"outp": "pong"}
 
-proc register*[T](modLoader: ModLoader, boundObj: T) =
-  modLoader.registerCommand(boundObj, "ping", cmdPing)
+# proc register*[T](modLoader: ModLoader, boundObj: T) =
+#   modLoader.registerCommand(boundObj, "ping", cmdPing)

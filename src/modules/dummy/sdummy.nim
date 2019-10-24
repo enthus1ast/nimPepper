@@ -1,8 +1,37 @@
-import ../../typesModule
+import ../../typesModuleSlave
 import ../../typesPepperSlave
-import ../../moduleLoader
+# import ../../moduleLoader
 import tables
 # import osproc, sequtils
+
+
+#############################
+# import ../../
+
+
+var moduleVar = "some var"
+# var module* {.exportc.} = newSlaveModule("dummy")
+var modsdummy* {.exportc.} = newSlaveModule("dummy")
+modsdummy.initProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  return (%* {
+    "outp": "INIT"
+  })
+
+modsdummy.boundCommands["dummy1"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  return (%* {
+    "outp": "dummy1: " & moduleVar
+  })
+
+modsdummy.boundCommands["dummy2"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  return (%* {
+    "outp": "dummy2: " & moduleVar
+  })
+
+
+modsdummy.unInitProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  return (%* {
+    "outp": "UNINIT"
+  })
 
 # var cmdDummy*: SlaveCommandFunc[PepperSlave] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async.} =
 #   ## Runs a command with the system shell, blocks until the command is finished

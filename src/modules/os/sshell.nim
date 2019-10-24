@@ -1,9 +1,13 @@
-import ../../typesModule
+import ../../typesModuleSlave
 import ../../typesPepperSlave
 import ../../moduleLoader
 import osproc, sequtils
 
-var cmdOsShellExecute*: SlaveCommandFunc[PepperSlave] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async.} =
+# var module* {.exportc.} = newSlaveModule("os")
+var modsshell* {.exportc.} = newSlaveModule("os")
+
+
+modsshell.boundCommands["shell"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   ## Runs a command with the system shell, blocks until the command is finished
   let (outp, errC) = execCmdEx(params)
   return (%* {
@@ -28,9 +32,9 @@ var cmdOsShellExecute*: SlaveCommandFunc[PepperSlave] = proc(obj: PepperSlave, p
 #   })
 
 
-proc register*[T](modLoader: ModLoader, boundObj: T) =
-  modLoader.registerCommand(boundObj, "os.shell", cmdOsShellExecute)
-  # modLoader.registerCommand(boundObj, "os.spawn", cmdOsSpawn)
+# proc register*[T](modLoader: ModLoader, boundObj: T) =
+#   modLoader.registerCommand(boundObj, "os.shell", cmdOsShellExecute)
+#   # modLoader.registerCommand(boundObj, "os.spawn", cmdOsSpawn)
 
 # when isMainModule:
 #   echo waitFor modLoader.call(boundObj, "os.shell", %* {"cmd": "ifconfig -a"})
