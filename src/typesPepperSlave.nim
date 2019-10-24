@@ -1,5 +1,5 @@
 import pepperdImports
-import pepperslaveImports
+# import pepperslaveImports
 type
   PepperSlave* = ref object
     configSlave*: Config
@@ -7,4 +7,4 @@ type
     pathPepperSlave*: string # the path where the executable is
     pathConfigPepperSlave*: string # the path to the config file
     ws*: AsyncWebSocket
-    modLoader*: ModLoader[PepperSlave]
+    # modLoader*: ModLoader[PepperSlave]

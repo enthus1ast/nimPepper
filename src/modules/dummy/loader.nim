@@ -1,6 +1,7 @@
 import dynlib, tables
 import asyncdispatch, json
 import ../../typesPepperSlave
+import ../../typesModule
 # import ../../moduleLoader.nim
 
 var lib = loadLib("./libsdummy.so")
@@ -19,12 +20,17 @@ else:
 
 var pepperSlave = PepperSlave()
 
-var exports = cast[ ptr seq[ (string, proc(obj: PepperSlave, params: string): Future[JsonNode]) ]  ](lib.checkedSymAddr("exports"))[]
-echo exports
+var module = cast[ ptr SlaveModule ](lib.checkedSymAddr("module"))[]
+echo module
+for key, boundCommand in module.boundCommands:
+  echo key, " -> ", waitFor boundCommand(pepperSlave, $ %* {})
 
-for exporta in exports:
-  echo exporta[0]
-  echo waitFor exporta[1](pepperSlave, "")
+# var exports = cast[ ptr seq[ (string, proc(obj: PepperSlave, params: string): Future[JsonNode]) ]  ](lib.checkedSymAddr("exports"))[]
+# echo exports
+
+# for exporta in exports:
+#   echo exporta[0]
+#   echo waitFor exporta[1](pepperSlave, "")
 
 # echo repr exportsp
 
