@@ -56,8 +56,6 @@ proc call[T, boundObj](modLoader: ModLoader[T], obj: boundObj, name, params: str
   result = await module.boundCommands[commandName](obj, params)
     
 
-
-
 # type
 #   ## The obj that loads, the modules 
 #   SlaveCommandFunc*[T] = proc(obj: T, params: string = ""): Future[JsonNode]
@@ -69,10 +67,14 @@ proc call[T, boundObj](modLoader: ModLoader[T], obj: boundObj, name, params: str
 when isMainModule:
   var pepperSlave = PepperSlave()
   var modLoader = newModLoader[SlaveModule]()
+
+  ### Dynamic loading
   var module = loadModule[SlaveModule]( getCurrentDir() ,"sdummy")
   modLoader.registerModule(module)
   echo modLoader.listCommands()
-  echo waitFor call[SlaveModule, PepperSlave](modLoader,pepperSlave, "dummy.dummy1", $ %*{})
+  echo "OUT:",  waitFor call[SlaveModule, PepperSlave](modLoader,pepperSlave, "dummy.dummy1", $ %*{})
+  
+  
   ### Dynamic loading
   # block:
   #   echo "dynamic"

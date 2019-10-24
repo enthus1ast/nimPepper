@@ -404,7 +404,7 @@ proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
     for client in pepperd.clients.values:
       echo "pinging: ", client.name
       var msg = MsgReq()
-      msg.command = "ping"
+      msg.command = "defaults.ping"
       echo "send to: ", $client
       await pepperd.send(client, msg)
       try:

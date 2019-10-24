@@ -44,7 +44,7 @@ proc newPepperSlave(): PepperSlave =
   result = PepperSlave()
   result.pathPepperSlave = getCurrentDir()
   result.createEnvironment()
-  result.modLoader = ModLoader[PepperSlave]()
+  result.modLoader = ModLoader[SlaveModule]()
 
 proc getMasterHost(slave: PepperSlave): string = 
   return "$#:$#" % [
@@ -146,7 +146,7 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
 
-    let outp = await slave.modLoader.call(slave, msgReq.command, msgReq.params)
+    let outp = await call[SlaveModule, PepperSlave](slave.modLoader, slave, msgReq.command, msgReq.params)
 
     var msgRes = MsgRes()
     msgRes.senderName = hostname()

@@ -1,4 +1,4 @@
-import ../../typesModule
+import ../../typesModuleSlave
 import ../../typesPepperSlave
 # import ../../moduleLoader
 import tables
@@ -10,24 +10,25 @@ import tables
 
 
 var moduleVar = "some var"
-var module* {.exportc.} = newSlaveModule("dummy")
-module.initProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+# var module* {.exportc.} = newSlaveModule("dummy")
+var modsdummy* {.exportc.} = newSlaveModule("dummy")
+modsdummy.initProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return (%* {
     "outp": "INIT"
   })
 
-module.boundCommands["dummy1"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+modsdummy.boundCommands["dummy1"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return (%* {
     "outp": "dummy1: " & moduleVar
   })
 
-module.boundCommands["dummy2"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+modsdummy.boundCommands["dummy2"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return (%* {
     "outp": "dummy2: " & moduleVar
   })
 
 
-module.unInitProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+modsdummy.unInitProc = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return (%* {
     "outp": "UNINIT"
   })
