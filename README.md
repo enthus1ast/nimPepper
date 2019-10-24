@@ -71,6 +71,30 @@ call commandos
 ===============
 
 
+text substitiution
+==================
+
+text in commandos can be substituted:
+
+- text in `$<text>$` is substituted by the pepperslave.
+- text in `%<text>%` is substituted by the master `pepperd`
+
+example:
+```
+./pepper call "*" "dynamic.load" "$modules$/dummy/sdummy
+```
+
+for a complete list of all valid substitions consult:
+
+```
+# for slave substitutions
+./pepper call "*" "substitution.list"
+
+# for master substitutions
+./pepper substitution list
+```
+
+
 
 
 distribute files
