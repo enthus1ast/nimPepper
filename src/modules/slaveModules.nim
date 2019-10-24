@@ -2,8 +2,7 @@
 import ../pepperslaveImports
 ## Add modules here that should be compiled into the pepperSlave executable
 import os/sshell
-import os/sping
-# export sshell
+import defaults/sping
 
 ## Also call register of each module
 proc register*[T](modLoader: ModLoader, boundObj: T) =

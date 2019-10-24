@@ -19,8 +19,11 @@ proc call*[T](loader: ModLoader, obj: T, name: string, params: string = ""): Fut
   echo "[module] calling: ", name
   if not loader.registeredCommands.contains(name):
     echo "[module] command unknown: ", name
-    raise newException(ValueError, "command unknown: " & name)
-  result = await loader.registeredCommands[name](obj, params)
+    # raise newException(ValueError, "command unknown: " & name)
+    result = %* {"outp": "command unknown: " & name}
+    # return
+  else:
+    result = await loader.registeredCommands[name](obj, params)
   echo "[module] ^^^ command calling done ^^^ "
 
 proc registerCommand*[T](loader: ModLoader, obj: T, name: string, commandFunc: SlaveCommandFunc[T], doc: string = "") = 

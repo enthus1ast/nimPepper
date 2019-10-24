@@ -178,7 +178,7 @@ proc randomString(len: int = 10): string =
 
 proc packEnvelope*(msg: MessageConcept): MessageEnvelope = 
   result = MessageEnvelope()
-  # result.nonce = randomString()
+  result.nonce = randomString(random(10))
   result.messageType = msg.messageType
   result.msg = pack(msg)
 

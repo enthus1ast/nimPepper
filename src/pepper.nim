@@ -55,7 +55,7 @@ proc print(clientInfo: ClientInfo) =
     setForegroundColor(fgRed)
   echo fmt"{clientInfo.name} ({clientInfo.ip}) {clientInfo.publicKey}"
   setForegroundColor(fgDefault)
-  
+
 proc help() = 
   echo HELP
   echo "Valid Commands:"
@@ -115,13 +115,17 @@ elif chk(params, "keys clear unaccepted$.", "removes all unaccepted keys"):
   echo "cleared all UNACCEPTED"
   setForegroundColor(fgDefault)
 
-
 elif chk(params, "call", "call commands on hosts eg: call \"targetselector\" \"commands to send\" "):
   var p = initOptParser()
   var cmds = toSeq(p.getopt)
   targets = cmds[1].key
   command = cmds[2].key
-  commandParams = cmds[3].key
+  
+  if cmds.len >= 4:
+    commandParams = cmds[3].key
+  else:
+    commandParams = ""
+
   for res in call(targets, command, commandParams):
     setForegroundColor(fgGreen)
     echo "#################"
