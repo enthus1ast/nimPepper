@@ -40,11 +40,19 @@ proc createEnvironment(slave: PepperSlave) =
   else:
     slave.configSlave = loadConfig(slave.pathConfigPepperSlave)
 
+proc newSubstitutionContext(slave: PepperSlave): StringTableRef = 
+  result = newStringTable(modeCaseSensitive)
+  result["slavedir"] = getAppDir()
+  result["modules"] = getAppDir() / "modules/"
+  echo "SUBSTITUTIONS:", result
+
+
 proc newPepperSlave(): PepperSlave = 
   result = PepperSlave()
   result.pathPepperSlave = getCurrentDir()
   result.createEnvironment()
   result.modLoader = ModLoader[SlaveModule]()
+  result.substitutionContext = newSubstitutionContext(result)
 
 proc getMasterHost(slave: PepperSlave): string = 
   return "$#:$#" % [
@@ -123,6 +131,8 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
   var firstLevelMsg = pack(firstLevel)
   await sendBinary(slave.ws, firstLevelMsg)
 
+proc sub(str: string, substitutionContext: StringTableRef): string =
+  `%`(str, substitutionContext, {useEnvironment, useKey})
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   var helo = MsgReq()
@@ -145,8 +155,13 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
 
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
-
-    let outp = await call[SlaveModule, PepperSlave](slave.modLoader, slave, msgReq.command, msgReq.params)
+    echo "SUB2": slave.substitutionContext
+    let outp = await call[SlaveModule, PepperSlave](
+      slave.modLoader, 
+      slave, 
+      msgReq.command.sub(slave.substitutionContext), 
+      msgReq.params.sub(slave.substitutionContext)
+    )
 
     var msgRes = MsgRes()
     msgRes.senderName = hostname()

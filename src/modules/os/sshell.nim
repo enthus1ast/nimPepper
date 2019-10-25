@@ -1,7 +1,7 @@
 import ../../typesModuleSlave
 import ../../typesPepperSlave
 import ../../moduleLoader
-import osproc, sequtils
+import osproc, sequtils, parseopt
 
 # var module* {.exportc.} = newSlaveModule("os")
 var modsshell* {.exportc.} = newSlaveModule("os")

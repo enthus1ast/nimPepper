@@ -76,12 +76,21 @@ text substitiution
 
 text in commandos can be substituted:
 
-- text in `$<text>$` is substituted by the pepperslave.
-- text in `%<text>%` is substituted by the master `pepperd`
+- text in `${<text>}` is substituted by the pepperslave.
+  When the substitution is not found, check the slaves process environment.
+  <b>warning, the local shell might break the substitution, so use \"'\'</b>
+eg:
+  ```
+  ./pepper call "*" "dynamic.load" '${modules}/dummy/sdummy'
+  ./pepper call "*" "os.shell" 'echo ${slavedir}'
+  ./pepper call "*" "os.shell" 'echo ${PATH}'
+  ```
+<!-- - text in `§<text>§` is substituted by the papperslave's environment parameters
+- text in `%<text>%` is substituted by the master `pepperd` -->
 
 example:
 ```
-./pepper call "*" "dynamic.load" "$modules$/dummy/sdummy
+./pepper call "*" "dynamic.load" "$modules$/dummy/sdummy"
 ```
 
 for a complete list of all valid substitions consult:
