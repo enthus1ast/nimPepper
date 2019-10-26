@@ -38,14 +38,23 @@ proc createEnvironment(slave: PepperSlave) =
       slave.pathConfigPepperSlave
     )
   else:
-    slave.configSlave = loadConfig(slave.pathConfigPepperSlave)
+    slave.configSlave =  loadConfig(slave.pathConfigPepperSlave)
+
+proc getMasterHost(slave: PepperSlave): string = 
+  return "$#:$#" % [
+    slave.configSlave.getSectionValue("master", "server"),
+    slave.configSlave.getSectionValue("master", "port")
+  ]
 
 proc newSubstitutionContext(slave: PepperSlave): StringTableRef = 
   result = newStringTable(modeCaseSensitive)
   result["slavedir"] = getAppDir()
   result["modules"] = getAppDir() / "modules/"
-  echo "SUBSTITUTIONS:", result
+  result["masterhost"] = slave.configSlave.getSectionValue("master", "server") 
+  result["masterport"] = slave.configSlave.getSectionValue("master", "port") 
+  result["master"] = slave.getMasterHost()
 
+  echo "SUBSTITUTIONS:", result
 
 proc newPepperSlave(): PepperSlave = 
   result = PepperSlave()
@@ -53,12 +62,6 @@ proc newPepperSlave(): PepperSlave =
   result.createEnvironment()
   result.modLoader = ModLoader[SlaveModule]()
   result.substitutionContext = newSubstitutionContext(result)
-
-proc getMasterHost(slave: PepperSlave): string = 
-  return "$#:$#" % [
-    slave.configSlave.getSectionValue("master", "server"),
-    slave.configSlave.getSectionValue("master", "port")
-  ]
 
 proc recvData(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
   var 

@@ -1,6 +1,7 @@
 import ../../typesModuleSlave
 import ../../typesPepperSlave
 import ../../moduleLoader
+import strutils
 
 # var module* {.exportc.} = newSlaveModule("defaults")
 var modsping* {.exportc.} = newSlaveModule("defaults")
@@ -8,5 +9,8 @@ var modsping* {.exportc.} = newSlaveModule("defaults")
 modsping.boundCommands["ping"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return %* {"outp": "pong"}
 
-# proc register*[T](modLoader: ModLoader, boundObj: T) =
-#   modLoader.registerCommand(boundObj, "ping", cmdPing)
+modsping.boundCommands["substitutions"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  var res = ""
+  for key, val in obj.substitutionContext:
+    res.add "$#: $# \n" % [key ,val]
+  return %* {"outp": res}
