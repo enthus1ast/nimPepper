@@ -1,6 +1,7 @@
 import parseopt, os, strscans, strutils, base64, terminal, sequtils, strformat
 import pepperdImports, typesPepperd, pepperd, keymanager, messages, msgpack4nim
 import pepperSlaveOnline
+import cligen
 
 iterator call(targets, commands, commandParams: string): MsgAdminRes =
   let ws = waitFor newAsyncWebsocketClient("localhost", Port(9999),

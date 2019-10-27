@@ -6,6 +6,7 @@ import messages
 import json
 import pepperslaveImports
 import modules.slaveModules
+import installation
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
@@ -54,11 +55,11 @@ proc newSubstitutionContext(slave: PepperSlave): StringTableRef =
   result["masterport"] = slave.configSlave.getSectionValue("master", "port") 
   result["master"] = slave.getMasterHost()
 
-  echo "SUBSTITUTIONS:", result
+  # echo "SUBSTITUTIONS:", result
 
 proc newPepperSlave(): PepperSlave = 
   result = PepperSlave()
-  result.pathPepperSlave = getCurrentDir()
+  result.pathPepperSlave = getAppDir()
   result.createEnvironment()
   result.modLoader = ModLoader[SlaveModule]()
   result.substitutionContext = newSubstitutionContext(result)
@@ -212,8 +213,34 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
       echo("[slave] Could not connect to master: ", slave.getMasterHost)
     await sleepAsync(5_000)
 
+import cligen
+proc cli(slave: PepperSlave) = 
+  proc install(master: string, port: uint16, publicKey: string, autostart = false): int=
+    ## Install on a slave node
+    if osinstall(master, port, publicKey, autostart):
+      echo "[+] installation sucessfull!"
+    else:
+      echo "[-] installation failure."
+    result = 0        # Of course, real code would have real logic here
+  proc changeMaster(master: string, port: uint16 = 8989, publicKey: string = ""): int =
+    slave.configSlave.setSectionKey("master", "server", master)
+    slave.configSlave.setSectionKey("master", "port", $port)
+    if publicKey != "":
+      slave.configSlave.setSectionKey("master", "publicKey", publicKey)
+    slave.configSlave.writeConfig(slave.pathConfigPepperSlave)
+    result = 0
+  proc showkey(): int =
+    ## Prints the configured public key
+    echo "-> PubSlave: ", slave.configSlave.getSectionValue("slave", "publicKey")
+    echo "PubMaster: ", slave.configSlave.getSectionValue("master", "publicKey")
+    result = 0
+  if paramCount() > 0:
+    dispatchMulti([install],  [showkey], [changeMaster]) #Whoa..Just 1 line??
+
+
 when isMainModule:
   var slave = newPepperSlave()
+  slave.cli()
   register(slave.modLoader, slave)
   echo "Available commands:"
   echo slave.modLoader.listCommands().join("\n")
