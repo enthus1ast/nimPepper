@@ -19,4 +19,4 @@ proc osinstall*(master: string, port: uint16, publicKey: string, autostart = fal
 # proc installLinux(master: string, port: uint16, autostart = false)
   
 when isMainModule:
-  echo osinstall("127.0.0.1", 8989, true)
+  echo osinstall("127.0.0.1", 8989, "pub", true)
