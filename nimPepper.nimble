@@ -18,5 +18,13 @@ requires "ed25519"
 requires "https://git.code0.xyz/sn0re/illwill.git"
 requires "websocket"
 requires "msgpack4nim"
+requires "xxtea"
+requires "glob"
+requires "winim"
+requires "winregistry"
+requires "cligen"
+
+
+
 
 

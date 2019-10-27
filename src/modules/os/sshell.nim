@@ -9,7 +9,12 @@ var modsshell* {.exportc.} = newSlaveModule("os")
 
 modsshell.boundCommands["shell"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   ## Runs a command with the system shell, blocks until the command is finished
-  let (outp, errC) = execCmdEx(params)
+  var outp: string
+  var errC: int
+  try:
+    (outp, errC) = execCmdEx(params)
+  except:
+    outp = "Could not execute (not found?): " & getCurrentExceptionMsg()
   return (%* {
     "outp": outp,
     "errc": errC

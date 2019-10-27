@@ -173,6 +173,7 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
   else:
     echo "client is unknown yet, create an unnacepted file."
     pepperd.createUnaccepted(req.senderName, req.senderPublicKey.toString)
+    await result.ws.close()
     raise
   echo "[BUG] reached the end... (not possible....)"
 
@@ -334,7 +335,7 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
   try:
     (opcode, data) = await pepperd.recvData(adminClient)
   except:
-    echo getCurrentExceptionMsg()
+    getCurrentExceptionMsg()
     return
   
   echo "get admin data:", data

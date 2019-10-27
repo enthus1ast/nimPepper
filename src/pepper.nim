@@ -1,7 +1,8 @@
 import parseopt, os, strscans, strutils, base64, terminal, sequtils, strformat
 import pepperdImports, typesPepperd, pepperd, keymanager, messages, msgpack4nim
 import pepperSlaveOnline
-import cligen
+import matcher
+# import cligen
 
 iterator call(targets, commands, commandParams: string): MsgAdminRes =
   let ws = waitFor newAsyncWebsocketClient("localhost", Port(9999),
@@ -67,16 +68,17 @@ proc help() =
 
 var
   ## vars that are set by the command line.
-  slaveName: string
-  targets: string
-  command: string
-  commandParams: string
+  # slaveName: string
+  # targets: string
+  # command: string
+  # commandParams: string
+  matches = newStringTable()
 
-template chk(params, pattern: string, doc: string = "", results: untyped = void ): bool = 
+template chk(params, pattern: string, doc: string = "", results: StringTableRef ): bool = 
   regs.add( (pattern, doc) ) 
-  scanf(params, pattern, results)
+  match(params, pattern, results)
 
-if chk(params, "keys list$.", "list all keys"):
+if chk(params, "keys list", "list all keys", matches):
   echo "show keys"
   setForegroundColor(fgGreen)
   echo "accepted:"
@@ -86,61 +88,61 @@ if chk(params, "keys list$.", "list all keys"):
   echo $pepd.getUnaccepted()  
   setForegroundColor(fgDefault)
 
-elif chk(params, "keys list accepted$.", "list accepted keys"):
+elif chk(params, "keys list accepted", "list accepted keys", matches):
   setForegroundColor(fgGreen)
   echo "accepted"
   echo $pepd.getAccepted()
   setForegroundColor(fgDefault)
 
-elif chk(params, "keys list unaccepted$.", "lists all unaccepted keys"):
+elif chk(params, "keys list unaccepted", "lists all unaccepted keys", matches):
   setForegroundColor(fgRed)
   echo "unaccepted"
   echo $pepd.getUnaccepted()
   setForegroundColor(fgDefault)
 
-elif chk(params, "keys accept $w", "accept the key by its name", slaveName):
+elif chk(params, "keys accept {slavename}", "accept the key by its name", matches):
   setForegroundColor(fgGreen)  
-  echo "ACCEPT: ", slaveName
-  pepd.accept(slaveName)
+  echo "ACCEPT: ", matches["slavename"] 
+  pepd.accept(matches["slavename"])
   setForegroundColor(fgDefault)
 
-elif chk(params, "keys unaccept $w", "unaccept the key by its name, leaves slave configuration untouched", slaveName):
-  setForegroundColor(fgRed)    
-  echo "UNACCEPT: ", slaveName
-  pepd.unacept(slaveName)
+elif chk(params, "keys unaccept {slavename}", "unaccept the key by its name, leaves slave configuration untouched", matches):
+  setForegroundColor(fgRed)
+  echo "UNACCEPT: ", matches["slavename"]
+  pepd.unacept(matches["slavename"])
   setForegroundColor(fgDefault)
 
-elif chk(params, "keys clear unaccepted$.", "removes all unaccepted keys"):
+elif chk(params, "keys clear unaccepted", "removes all unaccepted keys", matches):
   pepd.clearUnaccepted()
   setForegroundColor(fgRed)    
   echo "cleared all UNACCEPTED"
   setForegroundColor(fgDefault)
 
-elif chk(params, "call", "call commands on hosts eg: call \"targetselector\" \"commands to send\" "):
-  var p = initOptParser()
-  var cmds = toSeq(p.getopt)
-  targets = cmds[1].key
-  command = cmds[2].key
+elif chk(params, "call {targets} {command} {params}", "call commands on hosts eg: call \"targetselector\" \"commands to send\" ", matches):
+  # var p = initOptParser()
+  # var cmds = toSeq(p.getopt)
+  # targets = cmds[1].key
+  # command = cmds[2].key
   
-  if cmds.len >= 4:
-    commandParams = cmds[3].key
-  else:
-    commandParams = ""
+  # if cmds.len >= 4:
+  #   commandParams = cmds[3].key
+  # else:
+  #   commandParams = ""
 
-  for res in call(targets, command, commandParams):
+  for res in call(matches["targets"], matches["command"], matches["params"]):
     setForegroundColor(fgGreen)
     echo "#################"
     echo res.target
     setForegroundColor(fgDefault)
     echo parseJson(res.output)["outp"].getStr()
 
-elif chk(params, "slaves online$.", "list all slaves and if theyre online or not"):
+elif chk(params, "slaves online", "list all slaves and if theyre online or not", matches):
   for adminRes in call("*", "master.slaveinfo", ""):
     var clientInfo = ClientInfo()
     unpack(adminRes.output, clientInfo)
     print clientInfo  
 
-elif chk(params, "slaves online interactive$.", "starts an interactive overview of all slaves and if theire online"):
+elif chk(params, "slaves online interactive", "starts an interactive overview of all slaves and if theire online", matches):
   var so = newSlaveOnline()
   asyncCheck so.pepperSlaveOnlineMain()
 
@@ -155,7 +157,7 @@ elif chk(params, "slaves online interactive$.", "starts an interactive overview 
     # so.clients =   #master.slaveinfo
     waitFor sleepAsync(5000)
 
-elif chk(params, "help", "print this help"):
+elif chk(params, "help", "print this help", matches):
   help()
 else:
   echo "Unknown command given!"
