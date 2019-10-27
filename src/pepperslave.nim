@@ -55,8 +55,6 @@ proc newSubstitutionContext(slave: PepperSlave): StringTableRef =
   result["masterport"] = slave.configSlave.getSectionValue("master", "port") 
   result["master"] = slave.getMasterHost()
 
-  # echo "SUBSTITUTIONS:", result
-
 proc newPepperSlave(): PepperSlave = 
   result = PepperSlave()
   result.pathPepperSlave = getAppDir()
@@ -101,7 +99,6 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
       (opcode, data) = await slave.recvData()
     except: 
       raise
-    # echo "RECV:", opcode, "\n", data
   
     let myPrivateKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
     if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
@@ -154,12 +151,11 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
       (firstLevel, envelope) = await slave.recv()
     except:
       break
-    echo firstLevel
-    echo envelope
+    # echo firstLevel
+    # echo envelope
 
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
-    echo "SUB2": slave.substitutionContext
     let outp = await call[SlaveModule, PepperSlave](
       slave.modLoader, 
       slave, 
@@ -171,20 +167,8 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     msgRes.senderName = hostname()
     msgRes.senderPublicKey = slave.myPublicKey()
     msgRes.output = $ outp
-    echo "Going to send"
+    # echo "Going to send"
     await slave.send(msgRes)
-    # var signature: string = ""
-    # if not 
-    # if slave.ws.sock.isClosed:
-    #   info("[slave] lost connection")
-    #   return
-    # # echo repr slave.ws
-    # echo "SEND"
-    # echo slave.ws.sock.isClosed
-    # echo repr slave.ws.sock.getFd
-    # await sendText(slave.ws, "FOO".repeat(1000))
-    # # let (opcode, data) = await slave.ws.readData()
-    # await sleepAsync(1000)
 
 proc connectToMaster(slave: PepperSlave): Future[void] {.async.} = 
   var masterHost = slave.getMasterHost()
@@ -197,12 +181,6 @@ proc connectToMaster(slave: PepperSlave): Future[void] {.async.} =
   )
   # slave.ws.sock.getFd.setSockOpt(SO_KEEPALIVE, true)
   await slave.handleConnection()
-
-# proc ping(slave: PepperSlave): Future[void] {.async.} = 
-#   while true:
-#     await sleepAsync(6000)
-#     echo "ping"
-#     await slave.ws.sendPing()
 
 proc run(slave: PepperSlave): Future[void] {.async.} =
   while true:
@@ -222,6 +200,7 @@ proc cli(slave: PepperSlave) =
     else:
       echo "[-] installation failure."
     result = 0        # Of course, real code would have real logic here
+  
   proc changeMaster(master: string, port: uint16 = 8989, publicKey: string = ""): int =
     slave.configSlave.setSectionKey("master", "server", master)
     slave.configSlave.setSectionKey("master", "port", $port)
@@ -229,13 +208,14 @@ proc cli(slave: PepperSlave) =
       slave.configSlave.setSectionKey("master", "publicKey", publicKey)
     slave.configSlave.writeConfig(slave.pathConfigPepperSlave)
     result = 0
+  
   proc showkey(): int =
     ## Prints the configured public key
     echo "-> PubSlave: ", slave.configSlave.getSectionValue("slave", "publicKey")
     echo "PubMaster: ", slave.configSlave.getSectionValue("master", "publicKey")
     result = 0
   if paramCount() > 0:
-    dispatchMulti([install],  [showkey], [changeMaster]) #Whoa..Just 1 line??
+    dispatchMulti([install],  [showkey], [changeMaster])
 
 
 when isMainModule:

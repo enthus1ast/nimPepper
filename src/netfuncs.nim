@@ -98,7 +98,7 @@ proc unzipData*(uncryptedRaw: string, unzippedRaw: var string): bool =
   ## false otherwise
   try:
     unzippedRaw = uncompress(uncryptedRaw)
-    echo unzippedRaw.len
+    # echo unzippedRaw.len
   except:
     echo getCurrentExceptionMsg()
     return false
@@ -131,8 +131,6 @@ proc genSignature*(myPrivateKey: PrivateKey, myPublicKey: PublicKey,
   
 proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, data: var string): bool =
   let senderPublicKey = firstLevel.senderPublicKey
-  echo senderPublicKey
-  echo firstLevel
   if not verifySignature(firstLevel):
     info("[pepperd] could not verify signature on data")
     return false
@@ -199,7 +197,7 @@ proc unpack*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel,
   if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
     info("[pepperd] could not unpackFromFirstLevel") 
     return false
-  echo "unzippedRaw: ", unzippedRaw
+  # echo "unzippedRaw: ", unzippedRaw
 
   if not openEnvelope(unzippedRaw, envelope):
     info("[pepperd] could not unpackEnvelope")
