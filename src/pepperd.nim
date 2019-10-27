@@ -335,7 +335,7 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
   try:
     (opcode, data) = await pepperd.recvData(adminClient)
   except:
-    getCurrentExceptionMsg()
+    echo getCurrentExceptionMsg()
     return
   
   echo "get admin data:", data

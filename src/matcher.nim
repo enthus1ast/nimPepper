@@ -10,9 +10,8 @@ template getOrDefault(arr: typed, idx: int, default = ""): string =
   else:
     arr[idx].key
 
-proc match*(input, pattern: string, matches: StringTableRef): bool =
+proc match*(inputP: var OptParser, pattern: string, matches: StringTableRef): bool =
   matches.clear(modeCaseSensitive)
-  var inputP = initOptParser(input)
   var patternP = initOptParser(pattern)
   var inputSeq = toSeq(inputP.getopt())
   var patternSeq =toSeq(patternP.getopt())
@@ -28,39 +27,42 @@ proc match*(input, pattern: string, matches: StringTableRef): bool =
       if curI != curP: return false
   return true
 
+proc match*(input, pattern: string, matches: StringTableRef): bool =
+  var inputP = initOptParser(input)
+  match(inputP, pattern, matches)
+
 when isMainModule:
   import unittest
   suite "matcher":
-    test "match; no capture":
+    setup:
       var matches = newStringTable()
+    test "match; no capture":
       assert match("A B C", "A B C", matches)
       assert matches.len == 0
     test "no match; no capture; but more input":
-      var matches = newStringTable()
       assert false == match("A B C D", "A B C", matches)
       assert matches.len == 0      
     test "no match; no capture":
-      var matches = newStringTable()
       assert false == match("A B C", "A B QQ", matches)
       assert matches.len == 0
     test "match; capture":
-      var matches = newStringTable()
       assert true == match("A B C", "A B {some}", matches)
       assert matches.len == 1
       assert matches["some"] == "C"
+    test "match; capture with -":
+      assert true == match("""A B "ifconfig -tulpen"""", "A B {some}", matches)
+      assert matches.len == 1
+      assert matches["some"] == "ifconfig -tulpen"      
     test "match; only capture":
-      var matches = newStringTable()
       assert true == match("A B C", "{some1} {some2} {some3}", matches)
       assert matches.len == 3
       assert matches["some1"] == "A"
       assert matches["some2"] == "B"
       assert matches["some3"] == "C"
     test "match; more comples matches":
-      var matches = newStringTable()
       assert true == match("""A "ich bin da" C""", "A {some} C", matches)
       assert matches.len == 1
       assert matches["some"] == "ich bin da"
     test "match; with optional; caputre but empty":
-      var matches = newStringTable()
       assert true == match("A B C", "A B C {optional}", matches)
       assert matches.len == 1

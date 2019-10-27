@@ -38,9 +38,10 @@ proc getParamSeq(): seq[string] =
 
 proc getParamStr(): string =
   return getParamSeq().join(" ")
-
+echo getParamSeq()
+echo getParamStr()
 var pepd = newPepperd()
-let params = getParamStr()
+var params = initOptParser()
 const HELP = """
 SOME HELP
 """
@@ -74,7 +75,7 @@ var
   # commandParams: string
   matches = newStringTable()
 
-template chk(params, pattern: string, doc: string = "", results: StringTableRef ): bool = 
+template chk(params: OptParser, pattern: string, doc: string = "", results: StringTableRef ): bool = 
   regs.add( (pattern, doc) ) 
   match(params, pattern, results)
 
