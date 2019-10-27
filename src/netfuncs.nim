@@ -35,45 +35,10 @@ proc extractFirstLevel*(data: string, firstLevel: var FirstLevel): bool =
   ## false otherwise
   try:
     unpack(data, firstLevel)
-    # let firstLevelJ = parseJson(data)
-    # echo firstLevelJ
-    # firstLevel = json.to(firstLevelJ, FirstLevel)
   except:
     echo "could not unpack"
     return false
   return true
-  # var jsonMsg: JsonNode
-  # try:
-  #   jsonMsg = parseJson(data)
-  # except:
-  #   echo("could not parse json")
-  #   debug(data)
-  #   return false
-
-  # if jsonMsg.contains("senderPublicKey"):
-  #   try:
-  #     firstLevel.senderPublicKey = jsonMsg["senderPublicKey"].getStr().toPublicKey
-  #   except:
-  #     return false
-  # else:
-  #   echo("no senderPublicKey")
-  #   return false
-
-  # if jsonMsg.contains("raw"):
-  #   firstLevel.raw = jsonMsg["raw"].getStr()
-  # else:
-  #   error("no raw")
-  #   return false  
-
-  # if jsonMsg.contains("signature"):
-  #   try:
-  #     firstLevel.signature = jsonMsg["signature"].getStr().toSignature()
-  #   except:
-  #     return false
-  # else:
-  #   error("no signature")
-  #   return false
-  # return true
 
 proc verifySignature*(firstLevel: FirstLevel): bool = 
   verify(
@@ -197,28 +162,8 @@ proc unpack*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel,
   if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
     info("[pepperd] could not unpackFromFirstLevel") 
     return false
-  # echo "unzippedRaw: ", unzippedRaw
 
   if not openEnvelope(unzippedRaw, envelope):
     info("[pepperd] could not unpackEnvelope")
     return false
-  
   return true
-
-# template extractMessage*(envelope: MessageEnvelope): untyped = 
-#   # var foo
-#   # var msg: 
-#   # var msg = 
-#   case envelope.messageType
-#   of MessageType.MsgLog:
-#     var msg {.inject.}: MsgLog
-#     unpack(envelope.msg, msg)
-#     # msg
-#     # return msg
-#   of MessageType.MsgPing:
-#     var msg {.inject.}: MsgPing
-#     unpack(envelope.msg, msg)
-#     # msg
-#     # return msg
-#   else:
-#     echo "unknown message to extractMessage"
