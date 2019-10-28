@@ -179,44 +179,6 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
 
 proc handleWsMessage(pepperd: Pepperd, oclient: Client): Future[void] {.async.} =
   debug("[pepperd] in handle ws client")
-  # var client = oclient
-  # client.peerAddr = client.request.client.getPeerAddr
-
-  # var 
-  #   firstLevel: FirstLevel
-  #   envelope: MessageEnvelope 
-  # try:
-  #   (firstLevel, envelope) = await pepperd.recv(client)
-  # except:
-  #   return    
-  
-  # client.publicKey = firstLevel.senderPublicKey
-
-  # if not pepperd.clients.contains(client.ws):
-  #   client.publicKey = firstLevel.senderPublicKey
-  #   pepperd.clients.add(
-  #     client.ws,
-  #     client
-  #   )
-  # else:
-  #   echo "ws known"
-
-  # debug "Got: ", envelope.messageType
-  # case envelope.messageType
-  # of MessageType.MsgReq:
-  #   echo "got a request"
-  #   var req: MsgReq
-  #   unpack(envelope.msg, req)
-  #   echo req
-  # of MessageType.MsgRes:
-  #   echo "got a response"
-  #   var res: MsgRes
-  #   unpack(envelope.msg, res)
-  #   echo res
-  #   # if res.command == "ping":
-  # of MessageType.MsgUntrusted:
-  #   echo "client does not trust us"
-
 
 proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
   var client: Client
@@ -225,15 +187,6 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
   except:
     echo "authenticate failed somehow"
     return
-
-  # while true:
-    # var 
-    #   opcode: Opcode
-    #   data: string
-    # try:
-    #   (opcode, data) = await pepperd.recvData(client)
-    # except: 
-    #   break
   asyncCheck pepperd.handleWsMessage(client)
 
 iterator targets(pepperd: Pepperd, targets: string): Client =
@@ -272,7 +225,7 @@ proc slaveinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Fu
     # adminRes.output = res.output
     let adminResStr = pack(adminRes)
 
-    echo "going to send:", adminResStr
+    # echo "going to send:", adminResStr
     try:
       await adminClient.ws.sendBinary(adminResStr)
     except:
@@ -280,7 +233,7 @@ proc slaveinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Fu
       continue
   await adminClient.ws.close()
 
-  echo clientInfos
+  # echo clientInfos
 
 proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Future[void] {.async.} =
   for target in pepperd.targets(adminReq.targets):
@@ -314,7 +267,7 @@ proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq):
     adminRes.output = res.output
     let adminResStr = pack(adminRes)
 
-    echo "going to send:", adminResStr
+    # echo "going to send:", adminResStr
     try:
       await adminClient.ws.sendBinary(adminResStr)
     except:
@@ -338,7 +291,7 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     echo getCurrentExceptionMsg()
     return
   
-  echo "get admin data:", data
+  # echo "get admin data:", data
   var adminReq = MsgAdminReq()
   unpack(data, adminReq)
 
@@ -348,23 +301,6 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     await pepperd.slaveinfo(adminClient, adminReq)
   else:
     await pepperd.callOnSlaves(adminClient, adminReq)
-
-  
-  # var client: Client
-  # try:  
-  #   client = await pepperd.authenticate(request, ws)
-  # except:
-  #   echo "authenticate failed somehow"
-  #   return
-  # while true:
-    # var 
-    #   opcode: Opcode
-    #   data: string
-    # try:
-    #   (opcode, data) = await pepperd.recvData(client)
-    # except: 
-    #   break
-  # asyncCheck pepperd.handleWsMessage(client)
 
 proc httpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   let (ws, error) = await verifyWebsocketRequest(request, "pepper")
@@ -406,7 +342,7 @@ proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
       echo "pinging: ", client.name
       var msg = MsgReq()
       msg.command = "defaults.ping"
-      echo "send to: ", $client
+      # echo "send to: ", $client
       await pepperd.send(client, msg)
       try:
         if not await withTimeout(pepperd.recv(client), 5000):
