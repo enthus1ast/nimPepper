@@ -63,6 +63,6 @@ when isMainModule:
       assert true == match("""A "ich bin da" C""", "A {some} C", matches)
       assert matches.len == 1
       assert matches["some"] == "ich bin da"
-    test "match; with optional; caputre but empty":
+    test "match; with optional; capture but empty":
       assert true == match("A B C", "A B C {optional}", matches)
       assert matches.len == 1
