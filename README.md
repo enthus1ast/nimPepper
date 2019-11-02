@@ -85,19 +85,12 @@ eg:
   ./pepper call "*" "os.shell" 'echo ${slavedir}'
   ./pepper call "*" "os.shell" 'echo ${PATH}'
   ```
-<!-- - text in `§<text>§` is substituted by the papperslave's environment parameters
-- text in `%<text>%` is substituted by the master `pepperd` -->
-
-example:
-```
-./pepper call "*" "dynamic.load" "$modules$/dummy/sdummy"
-```
 
 for a complete list of all valid substitions consult:
 
 ```
 # for slave substitutions
-./pepper call "*" "substitution.list"
+./pepper call "*" "defaults.substitutions"
 
 # for master substitutions
 ./pepper substitution list
@@ -108,7 +101,7 @@ for a complete list of all valid substitions consult:
 
 distribute files
 ===============
-
+<b>!! NOT IMPLEMENTED YET !!</b>
 the pepperd is also a http server.
 dynamic loaded modules, new pepperSlave versions are distributed that way.
 but every file you want, can be distributed to the slaves.
