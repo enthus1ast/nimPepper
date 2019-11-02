@@ -1,3 +1,5 @@
 src/deleteme/*
 src/slaves/*
 *.pubkey
+*.exe
+tests/*
