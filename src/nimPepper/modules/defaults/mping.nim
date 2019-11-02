@@ -7,6 +7,8 @@ import ../../netfuncs
 import strutils
 import ../../pepperdFuncs
 
+import times
+
 # var module* {.exportc.} = newSlaveModule("defaults")
 var modmping* {.exportc.} = newMasterModule("defaults")
 
@@ -16,6 +18,7 @@ proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
       echo "pinging: ", client.name
       var msg = MsgReq()
       msg.command = "defaults.ping"
+      # msg.params = $getTime().toUnix()
       # echo "send to: ", $client
       await pepperd.send(client, msg)
       try:
@@ -27,12 +30,6 @@ proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
 
 modmping.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   asyncCheck obj.pingClients
-  
+
 modmping.boundCommands["ping"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   return %* {"outp": "pong"}
-
-# modmping.boundCommands["substitutions"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
-#   var res = ""
-#   for key, val in obj.substitutionContext:
-#     res.add "$#: $# \n" % [key ,val]
-#   return %* {"outp": res}

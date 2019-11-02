@@ -151,8 +151,6 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
       (firstLevel, envelope) = await slave.recv()
     except:
       break
-    # echo firstLevel
-    # echo envelope
 
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
@@ -179,7 +177,6 @@ proc connectToMaster(slave: PepperSlave): Future[void] {.async.} =
     path = "/",
     protocols = @["pepper"]
   )
-  # slave.ws.sock.getFd.setSockOpt(SO_KEEPALIVE, true)
   await slave.handleConnection()
 
 proc run(slave: PepperSlave): Future[void] {.async.} =
@@ -224,6 +221,5 @@ when isMainModule:
   register(slave.modLoader, slave)
   echo "Available commands:"
   echo slave.modLoader.listCommands().join("\n")
-  # asyncCheck slave.ping()
   asyncCheck slave.run()
   runForever()

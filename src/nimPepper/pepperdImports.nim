@@ -20,7 +20,6 @@ import nativesockets
 import random
 import glob
 import moduleLoader
-# import typesPepperd
 # -----------
 export parsecfg
 export os
@@ -44,4 +43,3 @@ export nativesockets
 export random
 export glob
 export moduleLoader
-# export typesPepperd

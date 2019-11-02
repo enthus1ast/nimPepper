@@ -67,13 +67,7 @@ proc help() =
     echo reg[0], "\t#", reg[1]
   # echo regs.join("\n")
 
-var
-  ## vars that are set by the command line.
-  # slaveName: string
-  # targets: string
-  # command: string
-  # commandParams: string
-  matches = newStringTable()
+var matches = newStringTable()
 
 template chk(params: OptParser, pattern: string, doc: string = "", results: StringTableRef ): bool = 
   regs.add( (pattern, doc) ) 
@@ -120,16 +114,6 @@ elif chk(params, "keys clear unaccepted", "removes all unaccepted keys", matches
   setForegroundColor(fgDefault)
 
 elif chk(params, "call {targets} {command} {params}", "call commands on hosts eg: call \"targetselector\" \"commands to send\" ", matches):
-  # var p = initOptParser()
-  # var cmds = toSeq(p.getopt)
-  # targets = cmds[1].key
-  # command = cmds[2].key
-  
-  # if cmds.len >= 4:
-  #   commandParams = cmds[3].key
-  # else:
-  #   commandParams = ""
-
   for res in call(matches["targets"], matches["command"], matches["params"]):
     setForegroundColor(fgGreen)
     echo "#################"
@@ -155,7 +139,6 @@ elif chk(params, "slaves online interactive", "starts an interactive overview of
       newClients.add clientInfo
     so.clients = newClients
     so.resetLastRefresh()
-    # so.clients =   #master.slaveinfo
     waitFor sleepAsync(5000)
 
 elif chk(params, "help", "print this help", matches):

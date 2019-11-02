@@ -143,18 +143,14 @@ proc slaveinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Fu
     var adminRes = MsgAdminRes()
     adminRes.target = clientInfo.name #$target.name
     adminRes.output = pack(clientInfo)
-    # adminRes.output = res.output
     let adminResStr = pack(adminRes)
 
-    # echo "going to send:", adminResStr
     try:
       await adminClient.ws.sendBinary(adminResStr)
     except:
       echo getCurrentExceptionMsg()
       continue
   await adminClient.ws.close()
-
-  # echo clientInfos
 
 proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Future[void] {.async.} =
   for target in pepperd.targets(adminReq.targets):
@@ -188,7 +184,6 @@ proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq):
     adminRes.output = res.output
     let adminResStr = pack(adminRes)
 
-    # echo "going to send:", adminResStr
     try:
       await adminClient.ws.sendBinary(adminResStr)
     except:
@@ -212,7 +207,6 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
     echo getCurrentExceptionMsg()
     return
   
-  # echo "get admin data:", data
   var adminReq = MsgAdminReq()
   unpack(data, adminReq)
 
@@ -258,24 +252,7 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
     proc (request: Request): Future[void] = httpBaseCallback(pepperd, request)
   )
 
-# proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
-#   while true:
-#     for client in pepperd.clients.values:
-#       echo "pinging: ", client.name
-#       var msg = MsgReq()
-#       msg.command = "defaults.ping"
-#       # echo "send to: ", $client
-#       await pepperd.send(client, msg)
-#       try:
-#         if not await withTimeout(pepperd.recv(client), 5000):
-#           raise
-#       except:
-#         await pepperd.handleLostClient(client.request, client.ws)
-#     await sleepAsync(2250)
-
 when isMainModule:
   var pepperd = newPepperd()
   pepperd.modLoader.register()
-  # asyncCheck pepperd.debugSendToAll()
-  # asyncCheck pepperd.pingClients()
   waitFor pepperd.run()

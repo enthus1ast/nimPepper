@@ -43,17 +43,6 @@ proc getLongestName(clients: seq[ClientInfo]): int =
       result = client.name.len
 
 proc renderOverview(so: SlaveOnline) =
-  # so.tb.setForegroundColor(fgBlack, true)
-  # so.tb.drawRect(0, 0, 40, 5)
-  # so.tb.drawHorizLine(2, 38, 3, doubleStyle=true)
-
-  # so.tb.write(5, 5, fgBlack , $so.tb.width.int , "/", $so.tb.height.int)
-  # so.tb.write(2, 1, fgWhite, "Press any key to display its name")
-  # so.tb.write(2, 2, "Press ", fgYellow, "ESC", fgWhite,
-  #               " or ", fgYellow, "Q", fgWhite, " to quit")
-  # so.tb.write(1, 8, fmt"Width:  {so.tb.width}")
-  # so.tb.write(1, 9, fmt"Height: {so.tb.height}")
-  # # tb.write(10,10, $idx)  
   var line = 0
   for client in so.clients:
     var bg = 
@@ -121,17 +110,7 @@ proc pepperSlaveOnlineMain*(so: SlaveOnline) {.async.} =
       so.renderDetail()
 
     so.writeMenu()
-    # idx.inc()
-    
     so.tb.write(20, 20, $key)
-    # case key
-    # of Key.None: discard
-    # of Key.Escape, Key.Q: exitProc()
-    # else:
-    #   # echo tb.width.int
-    #   tb.write(8, 4, ' '.repeat(31))
-    #   tb.write(2, 4 , resetStyle, "Key pressed: ", fgGreen, $key)
-
     so.tb.display()
     await sleepAsync(50)
 
