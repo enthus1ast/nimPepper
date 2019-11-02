@@ -10,13 +10,19 @@ proc hash*(ws: AsyncWebSocket): Hash =
   # h = h !& hash
   return h
 
-proc handleLostClient*(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async.} =
+proc handleLostClient*(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async, gcsafe.} =
   info("[pepperd] lost client: ") #,  #request.client.getPeerAddr)
   if pepperd.clients.contains(ws):
+    var client = pepperd.clients[ws]
+    # # Call the module handlers
+    for module in pepperd.modLoader.modules.values:
+      if module.slaveDisconnects.isNil: continue
+      await module.slaveDisconnects(pepperd, client)  
     debug("[pepperd] remove ws from clients table")
     pepperd.clients.del(ws)
   if not request.client.isClosed():
     request.client.close()
+
 
 proc send*(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {.async.} =
   let myPrivatKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey

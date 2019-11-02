@@ -1,4 +1,3 @@
-import ../../typesModuleSlave
 import ../../typesPepperSlave
 import ../../moduleLoader
 import osproc, sequtils, parseopt

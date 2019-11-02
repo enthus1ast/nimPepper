@@ -26,12 +26,20 @@ type
   MasterModuleUnInitProc* = proc(obj: Pepperd, params: string): Future[JsonNode]
   MasterModuleBoundCommandProc* = proc(obj: Pepperd, params: string): Future[JsonNode]
   MasterModuleBoundCommands* = Table[string, MasterModuleBoundCommandProc]
+  MasterModuleBoundAdminCommandProc* = proc(obj: Pepperd, params: string): Future[JsonNode]
+  MasterModuleBoundAdminCommands* = Table[string, MasterModuleBoundAdminCommandProc]  
+  MasterModuleSlaveConnectsProc* = proc(obj: Pepperd, client: Client): Future[void]
+  MasterModuleSlaveDisConnectsProc* = proc(obj: Pepperd, client: Client): Future[void]
   MasterModule* = object
     name*: string
     initProc*: MasterModuleInitProc
     boundCommands*: MasterModuleBoundCommands
+    boundAdminCommands*: MasterModuleBoundAdminCommands
     unInitProc*: MasterModuleUnInitProc
+    slaveConnects*: MasterModuleSlaveConnectsProc
+    slaveDisconnects*: MasterModuleSlaveDisConnectsProc
 
 proc newMasterModule*(name: string): MasterModule =
   result = MasterModule(name: name)
   result.boundCommands = initTable[string, MasterModuleBoundCommandProc]()
+  result.boundAdminCommands = initTable[string, MasterModuleBoundAdminCommandProc]()

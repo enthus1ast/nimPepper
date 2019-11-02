@@ -7,6 +7,7 @@ import ../typesPepperd
 # from defaults/sping import nil
 
 import defaults/mping
+import dummy/mdummy
 # import os/sshell
 # import defaults/sping
 # import defaults/sdynamic
@@ -17,6 +18,7 @@ proc register*(modLoader: ModLoader) =
   ## every module that is registered here will be available in the final executable
   # registerModule[MasterModule](modLoader, modsshell )
   registerModule[MasterModule](modLoader, modmping)
+  registerModule[MasterModule](modLoader, modmdummy)
   # registerModule[MasterModule](modLoader, modsdynamic)
   # sshell.register(modLoader, boundObj)
   # sping.register(modLoader, boundObj)

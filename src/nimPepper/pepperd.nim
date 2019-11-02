@@ -33,7 +33,7 @@ proc adminHttpCallback(pepperd: Pepperd, request: Request): Future[void] {.async
   await request.respond(Http400, "admin http not implemented")
   request.client.close()
 
-proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[Client] {.async.} =
+proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[Client] {.async, gcsafe.} =
   ## when the connection authenticated, create a client, add it to the
   ## clients list and returns the client, if not raise exception
   result = Client(
@@ -90,6 +90,11 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     else:
       echo "ws known"
 
+    ##Call the module handlers
+    for module in pepperd.modLoader.modules.values:
+      if module.slaveConnects.isNil: continue
+      await module.slaveConnects(pepperd, result)
+
     return result
   else:
     echo "client is unknown yet, create an unnacepted file."
@@ -107,12 +112,11 @@ proc wsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[
     client = await pepperd.authenticate(request, ws)
   except:
     echo "authenticate failed somehow"
+    echo getCurrentExceptionMsg()
     return
   asyncCheck pepperd.handleWsMessage(client)
 
 iterator targets(pepperd: Pepperd, targets: string): Client =
-  echo "dummy iterator targets"
-  # echo repr pepperd.clients
   var pattern = targets.glob()
   for client in pepperd.clients.values:
     if client.name.matches(pattern):
