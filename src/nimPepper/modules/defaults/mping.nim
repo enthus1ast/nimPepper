@@ -25,7 +25,9 @@ proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
         await pepperd.handleLostClient(client.request, client.ws)
     await sleepAsync(2250)
 
-
+modmping.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+  asyncCheck obj.pingClients
+  
 modmping.boundCommands["ping"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   return %* {"outp": "pong"}
 

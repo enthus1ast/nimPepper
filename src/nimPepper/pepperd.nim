@@ -8,6 +8,7 @@ import keymanager
 import createenv
 import options
 import pepperdFuncs
+import modules/masterModules
 
 proc myPublicKey(pepperd: Pepperd): PublicKey =
   return pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
@@ -17,11 +18,12 @@ proc myPrivateKey(pepperd: Pepperd): PrivateKey =
 
 proc newPepperd*(): Pepperd = 
   result = Pepperd()
-  result.pathPepperd = getCurrentDir()
+  result.pathPepperd = getAppDir()
   result.createEnvironment()
   result.configPepperd = loadConfig(result.pathConfigPepperd)
   result.httpserver = newAsyncHttpServer()
   result.adminhttpserver = newAsyncHttpServer()
+  result.modLoader = newModLoader[MasterModule]()
 
 proc httpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
   await request.respond(Http400, "http not implemented")
@@ -239,10 +241,11 @@ proc adminHttpBaseCallback(pepperd: Pepperd, request: Request): Future[void] {.a
     debug("[pepperd] admin ws negotiation from: ", request.client.getPeerAddr)
     await adminWsCallback(pepperd, request, ws)
 
-
 proc run(pepperd: Pepperd): Future[void] {.async.} = 
   let port = Port(pepperd.configPepperd.getSectionValue("master", "httpport").parseInt.Port)
   let adminport = Port(pepperd.configPepperd.getSectionValue("master", "adminhttpport").parseInt.Port)
+  for module in pepperd.modLoader.modules.values:
+    await callInit(module, pepperd, "")
   info("[pepperd] binding http to: " & $port)
   info("[pepperd] binding admin http to: " & $adminport)
   asyncCheck pepperd.adminhttpserver.serve(
@@ -255,23 +258,24 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
     proc (request: Request): Future[void] = httpBaseCallback(pepperd, request)
   )
 
-proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
-  while true:
-    for client in pepperd.clients.values:
-      echo "pinging: ", client.name
-      var msg = MsgReq()
-      msg.command = "defaults.ping"
-      # echo "send to: ", $client
-      await pepperd.send(client, msg)
-      try:
-        if not await withTimeout(pepperd.recv(client), 5000):
-          raise
-      except:
-        await pepperd.handleLostClient(client.request, client.ws)
-    await sleepAsync(2250)
+# proc pingClients(pepperd: Pepperd): Future[void] {.async.} =
+#   while true:
+#     for client in pepperd.clients.values:
+#       echo "pinging: ", client.name
+#       var msg = MsgReq()
+#       msg.command = "defaults.ping"
+#       # echo "send to: ", $client
+#       await pepperd.send(client, msg)
+#       try:
+#         if not await withTimeout(pepperd.recv(client), 5000):
+#           raise
+#       except:
+#         await pepperd.handleLostClient(client.request, client.ws)
+#     await sleepAsync(2250)
 
 when isMainModule:
   var pepperd = newPepperd()
+  pepperd.modLoader.register()
   # asyncCheck pepperd.debugSendToAll()
-  asyncCheck pepperd.pingClients()
+  # asyncCheck pepperd.pingClients()
   waitFor pepperd.run()

@@ -4,7 +4,7 @@ export tables
 
 type 
   ModLoader*[T] = ref object
-    modules: Table[string, T]
+    modules*: Table[string, T]
 
 proc newModLoader*[T](): ModLoader[T] =
   result = ModLoader[T]()
@@ -12,6 +12,10 @@ proc newModLoader*[T](): ModLoader[T] =
 
 proc registerModule*[T](modLoader: ModLoader[T], module: T) =
   modLoader.modules.add(module.name, module)
+
+proc callInit*[M, O](module: M, obj: O, params: string): Future[void] {.async.} =
+  if module.initProc.isNil: return
+  discard await module.initProc(obj, params)
 
 proc listCommands*[T](modLoader: ModLoader[T]): seq[string] =
   result = @[]
