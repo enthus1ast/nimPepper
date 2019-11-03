@@ -1,11 +1,11 @@
 # import ../../typesModuleSlave
-import ../../pepperdImports
-import ../../typesPepperd
-import ../../moduleLoader
-import ../../messages
-import ../../netfuncs
+import ../../lib/pepperdImports
+import ../../lib/typesPepperd
+import ../../lib/moduleLoader
+import ../../lib/messages
+import ../../lib/netfuncs
+import ../../lib/pepperdFuncs
 import strutils
-import ../../pepperdFuncs
 
 import times
 

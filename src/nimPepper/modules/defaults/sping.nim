@@ -1,5 +1,5 @@
-import ../../typesPepperSlave
-import ../../moduleLoader
+import ../../lib/typesPepperSlave
+import ../../lib/moduleLoader
 import strutils
 
 # var module* {.exportc.} = newSlaveModule("defaults")

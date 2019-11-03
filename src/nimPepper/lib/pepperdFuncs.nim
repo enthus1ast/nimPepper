@@ -23,7 +23,6 @@ proc handleLostClient*(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): 
   if not request.client.isClosed():
     request.client.close()
 
-
 proc send*(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] {.async.} =
   let myPrivatKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
   let myPublicKey = pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey

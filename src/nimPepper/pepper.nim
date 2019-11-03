@@ -1,7 +1,12 @@
 import parseopt, os, strscans, strutils, base64, terminal, sequtils, strformat
-import pepperdImports, typesPepperd, pepperd, keymanager, messages, msgpack4nim
-import pepperSlaveOnline
-import matcher
+import lib/pepperdImports
+import lib/typesPepperd
+import lib/keymanager
+import lib/messages
+import lib/pepperSlaveOnline
+import lib/matcher
+import pepperd
+import msgpack4nim
 # import cligen
 
 iterator call(targets, commands, commandParams: string): MsgAdminRes =

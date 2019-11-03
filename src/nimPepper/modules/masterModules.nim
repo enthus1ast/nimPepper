@@ -1,7 +1,7 @@
 # import ../typesPepperSlave
 # import ../pepperslaveImports
-import ../pepperdImports
-import ../typesPepperd
+import ../lib/pepperdImports
+import ../lib/typesPepperd
 ## Add modules here that should be compiled into the pepperSlave executable
 # from os/sshell import nil
 # from defaults/sping import nil

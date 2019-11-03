@@ -1,14 +1,14 @@
-import messages
-import pepperdImports
-import typesPepperd
-import logger
-import hashes
-import netfuncs
-import keymanager
-import createenv
-import options
-import pepperdFuncs
+import lib/messages
+import lib/pepperdImports
+import lib/typesPepperd
+import lib/logger
+import lib/netfuncs
+import lib/keymanager
+import lib/createenv
+import lib/pepperdFuncs
 import modules/masterModules
+import options
+import hashes
 
 proc myPublicKey(pepperd: Pepperd): PublicKey =
   return pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey

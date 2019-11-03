@@ -1,12 +1,12 @@
-import pepperdImports
-import typesPepperSlave
-import logger
-import netfuncs
-import messages
-import json
-import pepperslaveImports
+import lib/pepperdImports
+import lib/typesPepperSlave
+import lib/logger
+import lib/netfuncs
+import lib/messages
+import lib/pepperslaveImports
+import lib/installation
 import modules.slaveModules
-import installation
+import json
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()

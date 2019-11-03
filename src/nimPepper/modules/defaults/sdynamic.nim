@@ -1,5 +1,5 @@
-import ../../typesPepperSlave
-import ../../moduleLoader
+import ../../lib/typesPepperSlave
+import ../../lib/moduleLoader
 import os, strutils
 
 var modsdynamic* {.exportc.} = newSlaveModule("dynamic")
