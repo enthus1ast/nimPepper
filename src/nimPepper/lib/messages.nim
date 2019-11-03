@@ -37,6 +37,7 @@ type
   MsgAdminRes* = object
     target*: string
     output*: string
+    json*: string
 
   ## Used to inform pepper of online clients
   ClientInfo* = object

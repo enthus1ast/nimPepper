@@ -124,7 +124,12 @@ elif chk(params, "call {targets} {command} {params}", "call commands on hosts eg
     echo "#################"
     echo res.target
     setForegroundColor(fgDefault)
-    echo parseJson(res.output)["outp"].getStr()
+    var js = parseJson(res.output)
+    if js.contains("outp"):
+      echo js["outp"].getStr()
+      js.delete("outp") # = %* ""
+    echo js.pretty
+    # echo parseJson(res.output)["outp"].getStr()
 
 elif chk(params, "slaves online", "list all slaves and if theyre online or not", matches):
   for adminRes in call("*", "master.slaveinfo", ""):

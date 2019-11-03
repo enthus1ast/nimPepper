@@ -186,6 +186,7 @@ proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq):
     var adminRes = MsgAdminRes()
     adminRes.target = $target.name
     adminRes.output = res.output
+    # adminRes.json = res.output.json
     let adminResStr = pack(adminRes)
 
     try:

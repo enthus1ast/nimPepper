@@ -7,6 +7,7 @@ import ../lib/pepperslaveImports
 import os/sshell
 import defaults/sping
 import defaults/sdynamic
+import defaults/sdetect
 
 ## Also call register of each module
 proc register*[T](modLoader: ModLoader, boundObj: T) =
@@ -15,5 +16,6 @@ proc register*[T](modLoader: ModLoader, boundObj: T) =
   registerModule[SlaveModule](modLoader, modsshell )
   registerModule[SlaveModule](modLoader, modsping)
   registerModule[SlaveModule](modLoader, modsdynamic)
+  registerModule[SlaveModule](modLoader, modsdetect)
   # sshell.register(modLoader, boundObj)
   # sping.register(modLoader, boundObj)
