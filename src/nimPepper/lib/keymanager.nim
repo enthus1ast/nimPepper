@@ -9,7 +9,6 @@ type
     publicKey*: string
 
 proc cleanStr(strTainted: TaintedString): string =
-  echo "cleanStr not implemented yet"
   result = strTainted.multiReplace(
     ("/", ""), 
     ("..", ""), 
@@ -75,7 +74,6 @@ proc accept*(pepperd: Pepperd, slaveNameTainted: TaintedString) =
 
 # proc delete*(pepperd: Pepperd, slaveName: string) = 
 #   ## deletes a given slave's public key
-
 
 proc unacept*(pepperd: Pepperd, slaveNameTainted: TaintedString) =
   ## removes a client public key from the accepted,
