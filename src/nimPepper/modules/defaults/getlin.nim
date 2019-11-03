@@ -296,4 +296,5 @@ genGetDistros()
 # what we need for nimpepper
 #############################################################################################
 proc getLinVer*(): string =
+  echo "TODO: getLinVer"
   return ($getDistros()).toLowerAscii()
