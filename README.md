@@ -138,11 +138,49 @@ The master can also be extendet by modules. This however is not implemented full
 slave: compile modules into the slave
 ------------------------------
 
+every module that is listed in:
+
+```
+modules/slaveModules.nim
+```
+
+is compiled into the ```pepperSlave``` binary.
+Please have a look how the current modules are implemented to 
+get an idea how to write one yourself.
+<b>the api is not finalized yet and is likely to change during further development</b>
+
 
 slave: load modules on runtime
 --------------------------------------
 
-<b>WARN loader and modules must be build the same! both must be release OR both must be debug build</b>
+compile a module with:
+
+```nim c --app:lib yourModule.nim```
+
+copy the resulting dynamic library to the slave machine (this will be automated later OR there will be a way to upload modules to the slaves through nimPepper)
+
+then call something like this:
+
+```
+./pepper "*" "dynamic.load" '${modules}/yourModuleFolder/yourmodule'
+```
+the moduleloader is platform agnostic so it automatically appends: 
+- *.dll for windows
+- lib*.so for linux
+- etc
+
+<b>WARN loader and modules must be build the same! both must be release OR both must be debug builds</b>
+
+
+list available commands/modules
+===============================
+
+this lists all available commands/modules, there should be no difference between statically compiled modules or dynamically loaded modules. Both should work the same, and these commands lists both of them:
+
+``` 
+./pepper call "*" "dynamic.modules"
+./pepper call "*" "dynamic.list"
+```
 
 
 interactive overview
