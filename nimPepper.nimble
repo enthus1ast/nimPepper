@@ -15,7 +15,6 @@ installExt    = @["nim"]
 requires "nim >= 1.0.9"
 requires "miniz"
 requires "ed25519"
-required "https://github.com/enthus1ast/illwill.git"
 requires "websocket"
 requires "msgpack4nim"
 requires "xxtea"
@@ -23,6 +22,8 @@ requires "glob"
 requires "winim"
 requires "winregistry"
 requires "cligen"
+required "https://github.com/enthus1ast/illwill.git"
+required "https://github.com/enthus1ast/nimPinger.git"
 
 
 

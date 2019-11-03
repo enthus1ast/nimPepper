@@ -8,6 +8,7 @@ import os/sshell
 import defaults/sping
 import defaults/sdynamic
 import defaults/sdetect
+import defaults/spac
 
 ## Also call register of each module
 proc register*[T](modLoader: ModLoader, boundObj: T) =
@@ -17,5 +18,6 @@ proc register*[T](modLoader: ModLoader, boundObj: T) =
   registerModule[SlaveModule](modLoader, modsping)
   registerModule[SlaveModule](modLoader, modsdynamic)
   registerModule[SlaveModule](modLoader, modsdetect)
+  registerModule[SlaveModule](modLoader, modspac)
   # sshell.register(modLoader, boundObj)
   # sping.register(modLoader, boundObj)
