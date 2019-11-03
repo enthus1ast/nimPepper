@@ -14,5 +14,8 @@ modsdynamic.boundCommands["load"] = proc(obj: PepperSlave, params: string): Futu
   except:
     return %* {"outp": "failed to load module: " & dir / lib & "\n" & getCurrentExceptionMsg() }
 
-modsdynamic.boundCommands["list"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+modsdynamic.boundCommands["modules"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return %* {"outp": obj.modLoader.listModules().join("\n")}
+
+modsdynamic.boundCommands["list"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
+  return %* {"outp": obj.modLoader.listCommands.join("\n")}

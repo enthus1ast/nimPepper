@@ -144,6 +144,19 @@ slave: load modules on runtime
 
 <b>WARN loader and modules must be build the same! both must be release OR both must be debug build</b>
 
+
+interactive overview
+====================
+
+the plan for nimPepper also is to be a simple monitoring tool.
+The beginnings of this plan can be seen with:
+
+```
+./pepper slaves online interactive
+```
+![smallOverview](screenshots/smallOverview.png)
+![detailedOverview](screenshots/detailedOverview.png)
+
 test ws
 ======
 

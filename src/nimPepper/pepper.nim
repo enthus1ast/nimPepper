@@ -43,8 +43,7 @@ proc getParamSeq(): seq[string] =
 
 proc getParamStr(): string =
   return getParamSeq().join(" ")
-echo getParamSeq()
-echo getParamStr()
+
 var pepd = newPepperd()
 var params = initOptParser()
 const HELP = """
