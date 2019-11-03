@@ -48,13 +48,13 @@ walkthrough
     accepted:
       
     unaccepted:
-      "slaveName"	<the slaves public key>
+      "slaveName" <the slaves public key>
 
     ./pepper keys accept slaveName
       ACCEPT: slaveName
 
 
-    ./pepper call "*" "ping"
+    ./pepper call "*" "defaults.ping"
     #################
     slaveName
     pong

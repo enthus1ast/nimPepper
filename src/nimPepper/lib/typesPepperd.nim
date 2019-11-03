@@ -30,6 +30,9 @@ type
   MasterModuleBoundAdminCommands* = Table[string, MasterModuleBoundAdminCommandProc]  
   MasterModuleSlaveConnectsProc* = proc(obj: Pepperd, client: Client): Future[void]
   MasterModuleSlaveDisConnectsProc* = proc(obj: Pepperd, client: Client): Future[void]
+  MasterModuleHttpCallbackProc* = proc(obj: Pepperd, request: Request): Future[bool]
+  MasterModuleHttpAdminCallbackProc* = proc(obj: Pepperd, request: Request): Future[bool]
+
   MasterModule* = object
     name*: string
     initProc*: MasterModuleInitProc
@@ -38,6 +41,8 @@ type
     unInitProc*: MasterModuleUnInitProc
     slaveConnects*: MasterModuleSlaveConnectsProc
     slaveDisconnects*: MasterModuleSlaveDisConnectsProc
+    httpCallback*: MasterModuleHttpCallbackProc
+    httpAdminCallback*: MasterModuleHttpAdminCallbackProc
 
 proc newMasterModule*(name: string): MasterModule =
   result = MasterModule(name: name)

@@ -25,12 +25,18 @@ proc newPepperd*(): Pepperd =
   result.adminhttpserver = newAsyncHttpServer()
   result.modLoader = newModLoader[MasterModule]()
 
-proc httpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
-  await request.respond(Http400, "http not implemented")
+proc httpCallback(pepperd: Pepperd, request: Request): Future[void] {.async, gcsafe.} =
+  # await request.respond(Http400, "http not implemented")
+  for module in pepperd.modLoader.modules.values:
+    if module.httpCallback.isNil: continue
+    if await module.httpCallback(pepperd, request): break
   request.client.close()
 
-proc adminHttpCallback(pepperd: Pepperd, request: Request): Future[void] {.async.} =
-  await request.respond(Http400, "admin http not implemented")
+proc adminHttpCallback(pepperd: Pepperd, request: Request): Future[void] {.async, gcsafe.} =
+  # await request.respond(Http400, "admin http not implemented")
+  for module in pepperd.modLoader.modules.values:
+    if module.httpCallback.isNil: continue
+    if await module.httpAdminCallback(pepperd, request): break
   request.client.close()
 
 proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[Client] {.async, gcsafe.} =
