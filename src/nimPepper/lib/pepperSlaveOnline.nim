@@ -54,7 +54,7 @@ proc renderOverview(so: SlaveOnline) =
     if (so.tb.getCursorXPos() + client.name.len) >= so.tb.width:
       so.tb.setCursorXPos(0)
       so.tb.setCursorYPos(so.tb.getCursorYPos() + 1)
-    so.tb.write(bg, client.name, bgBlack, " ")
+    so.tb.write(bg, fgBlack, client.name, bgBlack, " ")
     # if so.seperator:
     #   so.tb.write(bgWhite, fgBlack, "|", resetStyle)
   so.tb.write(resetStyle)
