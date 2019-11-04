@@ -3,6 +3,7 @@ import illwill
 import asyncdispatch
 import messages
 
+
 type 
   Modes = enum
     Overview, Detail
