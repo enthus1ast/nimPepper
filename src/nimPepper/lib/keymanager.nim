@@ -50,13 +50,14 @@ proc getUnaccepted*(pepperd: Pepperd): seq[SlaveForOutput] =
     ))
 
 proc getAccepted*(pepperd: Pepperd): seq[SlaveForOutput] =
-  var globstr = pepperd.pathSlaves / "*" / "*.pubkey"
-  # echo globstr
-  for path in walkFiles(globstr):
-    result.add(SlaveForOutput(
-      slaveName: path.splitFile.name,
-      publicKey: $readFile(path)
-    ))
+  var globstr = pepperd.pathSlaves 
+  for dirComp in walkDir(globstr):
+    let dir = dirComp.path
+    for path in walkFiles(dir / "*.pubkey"):
+      result.add(SlaveForOutput(
+        slaveName: path.splitFile.name,
+        publicKey: $readFile(path)
+      ))  
 
 proc clearUnaccepted*(pepperd: Pepperd) =
   var globstr = pepperd.pathUnacceptedKeys / "*.pubkey"
