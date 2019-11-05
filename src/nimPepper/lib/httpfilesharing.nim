@@ -1,21 +1,23 @@
-import asynchttpserver, os, strutils, json
+import asynchttpserver, os, strutils, json, algorithm, sequtils
 
 var basePath = "slaves/linux/"
 
-proc getLatest(dir: string = "www/slaves/linux/"): string = 
+proc getLatest*(dir: string = "www/slaves/linux/"): string = 
   ## returns the latest version directory
-  var latest: int = 0
-  var latestFullPath = ""
-  for path in walkPattern(dir / "*"):
-    var cur: int
-    try:
-      cur = path.splitPath.tail.parseInt
-    except:
-      continue
-    if cur > latest:
-      cur = latest
-      latestFullPath = path
-  return latestFullPath
+  # var latest: int = 0
+  # var latestFullPath = ""
+  # for path in walkPattern(dir / "*"):
+  #   var cur: int
+  #   try:
+  #     cur = path.splitPath.tail.parseInt
+  #   except:
+  #     continue
+  #   if cur > latest:
+  #     cur = latest
+  #     latestFullPath = path
+  let paths = toSeq(walkPattern(dir / "*")).sorted()
+  if paths.len == 0: return ""
+  return paths[^1]
 
 proc listing(base, dir: string): JsonNode = 
   result = newJArray()

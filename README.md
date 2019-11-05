@@ -133,7 +133,8 @@ Either by compile modules into the slave.
 This requires pepperslave recompilation.
 Or load a module (*.dll or *.so or *.dylib) on runtime.
 
-The master can also be extendet by modules. This however is not implemented fully yet.
+The master can also be extendet by modules, for instructions please see 
+the modules master sections below.
 
 slave: compile modules into the slave
 ------------------------------
@@ -145,6 +146,11 @@ modules/slaveModules.nim
 ```
 
 is compiled into the ```pepperSlave``` binary.
+
+Modules for slaves are prefixed with an 's':
+
+```sdummy.nim``` or ```sping.nim```
+
 Please have a look how the current modules are implemented to 
 get an idea how to write one yourself.
 <b>the api is not finalized yet and is likely to change during further development</b>
@@ -172,8 +178,29 @@ the moduleloader is platform agnostic so it automatically appends:
 <b>WARN loader and modules must be build the same! both must be release OR both must be debug builds</b>
 
 
-list available commands/modules
-===============================
+master: compile modules into the master
+---------------------------------------
+
+every module that is listed in:
+
+```
+modules/masterModules.nim
+```
+
+is compiled into the ```pepperd``` binary.
+
+Modules for the master are prefixed with an 'm':
+
+```mdummy.nim``` or ```mwww.nim```
+
+Please have a look how the current modules are implemented to 
+get an idea how to write one yourself.
+<b>the api is not finalized yet and is likely to change during further development</b>
+
+
+
+list available commands/modules (on the slaves)
+--------------------------------
 
 this lists all available commands/modules, there should be no difference between statically compiled modules or dynamically loaded modules. Both should work the same, and these commands lists both of them:
 

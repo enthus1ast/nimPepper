@@ -25,8 +25,7 @@ proc exitProc() {.noconv.} =
   quit(0)
 
 proc writeMenu(so: SlaveOnline) =
-  # tb.write(1, tb.height-1, fgWhite, "FOO")
-  so.tb.writePos(1, so.tb.height-1, 
+  so.tb.write(1, so.tb.height-1, 
     fgWhite, "Menu: ", 
     fgRed , "(1) ", fgWhite, "Overview |", 
     fgRed , "(2) ", fgWhite, "Details |",
@@ -57,8 +56,7 @@ proc renderOverview(so: SlaveOnline) =
     # if so.seperator:
     #   so.tb.write(bgWhite, fgBlack, "|", resetStyle)
   so.tb.write(resetStyle)
-    
-        
+
 proc renderDetail(so: SlaveOnline) = 
   var longestName = so.clients.getLongestName()
   var line = 0
@@ -68,7 +66,7 @@ proc renderDetail(so: SlaveOnline) =
         bgGreen
       else:
         bgRed
-    so.tb.writePos(1, line,  
+    so.tb.write(1, line,  
       fgWhite, bgBlack, if client.online: "[x]" else: "[ ]", resetStyle, " ",
       fgBlack, bg,
       client.name.alignLeft(longestName+1), 

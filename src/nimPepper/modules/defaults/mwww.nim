@@ -8,6 +8,7 @@ import ../../lib/pepperdFuncs
 import asynchttpserver # for the httpCallback and httpAdminCallback
 import strutils
 import times
+import ../../lib/httpfilesharing
 # import matcher
 
 # var module* {.exportc.} = newSlaveModule("defaults")
@@ -35,8 +36,14 @@ modmwww.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.asyn
   if not ($request.url.path).startsWith("/www"):
     return false
   case $request.url.path
-  of "/www/slaves/linux/latest":
-    await request.respond(Http200, "latest linux")
+  of "/www/linux/latest/pepperslave":
+    let slavePath = getLatest() / "pepperslave"
+    if not fileExists(slavePath): 
+      await request.respond(Http404, "not found")
+      return
+    var  slaveBinary = readFile(slavePath)
+    await request.respond(Http200, slaveBinary )
+
   of "/www/slaves/windows/latest":
     await request.respond(Http200, "latest windows")
   else:

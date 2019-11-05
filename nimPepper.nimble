@@ -22,10 +22,18 @@ requires "glob"
 requires "winim"
 requires "winregistry"
 requires "cligen"
-required "https://github.com/enthus1ast/illwill.git"
-required "https://github.com/enthus1ast/nimPinger.git"
+requires "https://github.com/enthus1ast/illwill.git"
+requires "https://github.com/enthus1ast/nimPinger.git"
 
 
+var swin = "nim c -d:release --os:windows --opt:speed ./src/nimPepper/pepperslave"
+var slin = "nim c -d:release --os:linux --opt:speed ./src/nimPepper/pepperslave"
 
-
+task slavewin, "builds slave for windows":
+  exec swin
+task slavelin, "builds slave for linux":
+  exec slin
+task slave, "builds slave for windows and linux":
+  exec swin
+  exec slin
 
