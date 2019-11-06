@@ -7,6 +7,7 @@ import defaults/sping
 import defaults/sdynamic
 import defaults/sdetect
 import defaults/spac
+import defaults/supdate
 
 proc register*[T](modLoader: ModLoader, boundObj: T) =
   ## this function gets called by the papperSlave, 
@@ -16,3 +17,4 @@ proc register*[T](modLoader: ModLoader, boundObj: T) =
   registerModule[SlaveModule](modLoader, modsdynamic)
   registerModule[SlaveModule](modLoader, modsdetect)
   registerModule[SlaveModule](modLoader, modspac)
+  registerModule[SlaveModule](modLoader, modsupdate)

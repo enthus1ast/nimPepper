@@ -12,26 +12,32 @@ import ../../lib/httpfilesharing
 # import matcher
 
 # var module* {.exportc.} = newSlaveModule("defaults")
-var modmwww* {.exportc.} = newMasterModule("www")
+var modmupdate* {.exportc.} = newMasterModule("update")
 
 
-modmwww.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+modmupdate.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   # asyncCheck obj.pingClients
-  echo "www INIT CALLED"
+  # echo "www INIT CALLED"
+  createDir(getAppDir() / "www/slaves/linux")
+  createDir(getAppDir() / "www/slaves/windows")
+  createDir(getAppDir() / "www/slaves/macos")
 
-# modmwww.boundCommands["dummy"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+# modmupdate.boundCommands["dummy"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
 #   echo "www COMMAND CALLED"
 #   return %* {"outp": "pong"}
 
-modmwww.slaveConnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
+modmupdate.slaveConnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
   echo "WWW CLIENT CONNECTS:", client.peerAddr #, repr client
+  ## check slave for version
+  ## if version is old
+  ##  initialize update process
   return
 
-modmwww.slaveDisconnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
+modmupdate.slaveDisconnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
   echo "WWW CLIENT DISCONNECTS:", client.peerAddr #repr client
   return
 
-modmwww.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
+modmupdate.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
   ## returns true if the http request was handled by this callback  
   if not ($request.url.path).startsWith("/www"):
     return false
@@ -50,7 +56,7 @@ modmwww.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.asyn
     return false
   return true
 
-modmwww.httpAdminCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
+modmupdate.httpAdminCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
   ## returns true if the http request was handled by this callback
   if ($request.url.path).startsWith("/www"):
     await request.respond(Http200, "www")

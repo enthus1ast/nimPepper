@@ -1,0 +1,9 @@
+[[checks.web_200]]
+url = "http://biochem2.com"
+
+[[checks.web_200]]
+url = "https://biochem2.com"
+
+[[checks.web_contains]]
+url = "https://biochem2.com"
+contains = "some string"

@@ -1,0 +1,17 @@
+[web_200]
+description = "makes http call and test if http return code is 200"
+path = "${checks}/"
+binary = "web"
+params = '-u "${url}" --code:200'
+
+[web_contains]
+description = "makes http call and test if the site contains certain string"
+path = "${checks}/"
+binary = "web"
+params = '-u "${url}" --contains:${contains}'
+
+[ping]
+description = "pings a host"
+path = "${checks}/"
+binary = "ping"
+params = '-h "${host}"'
