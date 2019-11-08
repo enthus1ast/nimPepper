@@ -211,11 +211,17 @@ proc cli(slave: PepperSlave) =
     echo "-> PubSlave: ", slave.configSlave.getSectionValue("slave", "publicKey")
     echo "PubMaster: ", slave.configSlave.getSectionValue("master", "publicKey")
     result = 0
+
+  proc triggerTrap(trapName: string) =
+    ## triggers a trap on the master by its name `trapName, then exits
+    discard
+
   if paramCount() > 0:
-    dispatchMulti([install],  [showkey], [changeMaster])
+    dispatchMulti([install],  [showkey], [changeMaster], [triggerTrap])
 
 
 when isMainModule:
+  randomize()
   var slave = newPepperSlave()
   slave.cli()
   register(slave.modLoader, slave)

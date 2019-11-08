@@ -264,6 +264,7 @@ proc run(pepperd: Pepperd): Future[void] {.async.} =
   )
 
 when isMainModule:
+  randomize()
   var pepperd = newPepperd()
   pepperd.modLoader.register()
   waitFor pepperd.run()

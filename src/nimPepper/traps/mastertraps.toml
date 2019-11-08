@@ -1,0 +1,23 @@
+## traps are like heartbeats, a heartbeat MUST occure `every` time units
+## if not the trap "check" is failed
+
+[commontrap]
+trigger = "once" # the trap will trigger only once, must be "rearmed" by a good message
+# trigger = "repeat" # the trap will trigger every check
+
+
+[[trap.commonShareBackup]]
+load = "commonTrap"
+every = "1.5 days"
+slave = "backup1"
+
+[[trap.crisprShareBackup]]
+load = "commonTrap"
+every = "1.5 hours"
+slave = "backup1"
+
+[[trap.davidNotebookBackup]]
+load = "commonTrap"
+every = "1.5 days"
+
+
