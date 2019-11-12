@@ -189,6 +189,8 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
     except:
       echo getCurrentExceptionMsg()
       echo("[slave] Could not connect to master: ", slave.getMasterHost)
+      if (not slave.ws.isNil) and (not slave.ws.sock.isNil) and (not slave.ws.sock.isClosed): # todo maybe to paranoid?
+        slave.ws.sock.close() # close the connection in case of error
     await sleepAsync(5_000)
 
 import cligen
