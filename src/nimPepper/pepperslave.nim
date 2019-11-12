@@ -7,6 +7,9 @@ import lib/pepperslaveImports
 import lib/installation
 import modules.slaveModules
 import json
+import strutils
+import modules.defaults.sharedmasterfind
+import asyncudp, net
 
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
@@ -189,6 +192,8 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
     await sleepAsync(5_000)
 
 import cligen
+import httpclient
+
 proc cli(slave: PepperSlave) = 
   proc install(master: string, port: uint16, publicKey: string, autostart = false): int=
     ## Install on a slave node
@@ -212,12 +217,71 @@ proc cli(slave: PepperSlave) =
     echo "PubMaster: ", slave.configSlave.getSectionValue("master", "publicKey")
     result = 0
 
-  proc triggerTrap(trapName: string) =
+  proc triggerTrap(trap: string, good = false, bad = false, data = ""): int =
     ## triggers a trap on the master by its name `trapName, then exits
+    const magicTrapBody = "bum"
+    if good and bad: 
+      echo "either 'good' OR 'bad' not both"
+      return 1
+    if (not good) and (not bad):
+      echo "was it 'good' OR 'bad' ??"
+      return 1
     discard
+    let js = %* {
+      "trap": trap,
+      "good": good,
+      "bad": bad,
+      "data": data
+    }
+    ## TODO compress sign and crypt the body!
+    var client = newHttpclient()
+    var res: Response
+    # var error: false
+    try:
+      res = client.post(
+        "http://$host/trap/$trap/$slave" % [
+          "host", slave.getMasterHost(),
+          "trap", trap, # TODO encode html
+          "slave", hostname() # TODO encode html
+        ], 
+        body = $js
+      )
+    except:
+      # error = true
+      echo "could not trigger trap ($trap):" % ["trap", trap], getCurrentExceptionMsg()
+      quit() ## TODO save the trap trigger somewhere and send later 
+    
+    if res.status != Http200:
+      echo "could reach server but not Http200"
+      quit()
+    if res.body != magicTrapBody:
+      echo "no magic trap body"
+      quit()
+    echo repr res
+
+
+  proc masterfind() = 
+    ## tries to find a pepperd master on the network, 
+    ## useing udp multicast, tries to find as many masters as possible, 
+    ## must be canceled with crtl+c
+    var socket = newAsyncSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+    waitFor socket.sendTo(multicastGroup, multicastPort.Port, magicReq)
+    while true:
+      var res = waitFor socket.recvFrom(1024)
+      if res.data.startsWith(magicRes):
+        let parts = res.data.split()
+        if parts.len >= 3:
+          try:
+            let port = parseInt(parts[1]).Port
+            let pubkey = parts[2]
+            echo "found master:\n$#:$# $#" % [res.address, $port, pubkey]
+          except:
+            discard
+
 
   if paramCount() > 0:
-    dispatchMulti([install],  [showkey], [changeMaster], [triggerTrap])
+    dispatchMulti([install],  [showkey], [changeMaster], [triggerTrap], [masterfind])
+
 
 
 when isMainModule:

@@ -24,10 +24,14 @@ requires "winregistry"
 requires "cligen"
 requires "https://github.com/enthus1ast/illwill.git"
 requires "https://github.com/enthus1ast/nimPinger.git"
+requires "https://github.com/enthus1ast/nimAsyncUdp.git"
+requires "multicast"
 
 
 var swin = "nim c -d:release --os:windows --opt:speed ./src/nimPepper/pepperslave"
-var slin = "nim c -d:release --os:linux --opt:speed ./src/nimPepper/pepperslave"
+# var slin = "nim c -d:release --os:linux --opt:speed ./src/nimPepper/pepperslave"
+var slin = "nim --gcc.exe:musl-gcc --gcc.linkerexe:musl-gcc --passL:-static --passL:-s c -d:release --os:linux --opt:speed ./src/nimPepper/pepperslave"
+
 
 task slavewin, "builds slave for windows":
   exec swin

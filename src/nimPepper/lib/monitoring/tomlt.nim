@@ -36,11 +36,11 @@ import parsetoml, json, tables
 
 # """)
 
-let cmds = parseToml.parseFile("commands.toml")
+let cmds = parseToml.parseFile(getAppDir() / "mastertraps.toml")
 # echo cmds.getTable()
 for k, v in cmds.getTable :
     echo k
-    echo v["binary"]
-    echo v["params"]
+    # echo v["binary"]
+    # echo v["params"]
 # echo cmds["web_200"]
 # echo table1.toJson.pretty()

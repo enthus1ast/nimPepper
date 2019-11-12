@@ -7,6 +7,8 @@ import defaults/mping
 import dummy/mdummy
 # import defaults/mwww
 import defaults/mupdate
+import defaults/mmasterfind
+import defaults/mtraps
 
 
 proc register*(modLoader: ModLoader) =
@@ -16,3 +18,6 @@ proc register*(modLoader: ModLoader) =
   registerModule[MasterModule](modLoader, modmdummy)
   # registerModule[MasterModule](modLoader, modmwww)
   registerModule[MasterModule](modLoader, modmupdate)
+  registerModule[MasterModule](modLoader, modmmasterfind)
+  registerModule[MasterModule](modLoader, modmtraps)
+

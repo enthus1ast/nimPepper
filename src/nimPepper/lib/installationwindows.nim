@@ -1,26 +1,45 @@
-# cp installation.exe /home/david/vmshare/
-# vboxmanage guestcontrol windows7 run --username peter --password 123poipoi --exe "Z:/installation.exe" --wait-stdout
-import winregistry
+## on windows we use nssm for now ( https://nssm.cc/ )
+import os, strutils
 
-var
-  faceName: string
-  fontSize: int32
-  fontWeight: int32
-  h: RegHandle
-
-try:
-  h = open("HKEY_CURRENT_USER\\Console\\Git Bash", samRead)
-  faceName = h.readString("FaceName")
-  fontSize = h.readInt32("FontSize")
-  fontWeight = h.readInt32("FontWeight")
-  echo faceName
-  echo fontSize
-  echo fontWeight
-except RegistryError:
-  echo "err: ", getCurrentExceptionMsg()
-finally:
-  close(h)
+const SERVICENAME = "pepperslave"
+let DEFAULT_PATH = getEnv("programfiles") / "pepperslave"
 
 proc install*(master: string, port: uint16, pubKey: string, autostart = false): bool =
-  discard
-  echo "foo"
+  try:
+    var res = 0
+    echo "[+] creating dirs"
+    createDir(DEFAULT_PATH)
+    DEFAULT_PATH.setFilePermissions({fpUserExec, fpUserWrite, fpUserRead})
+    let newFile = DEFAULT_PATH / getAppFilename().extractFilename
+    
+    echo "[+] copy files"
+    copyFile(getAppFilename(), newFile )
+    newFile.setFilePermissions({fpUserExec, fpUserWrite, fpUserRead})
+
+    let 
+      nssmold = getAppDir() / "nssm.exe"
+      nssmnew = DEFAULT_PATH / "nssm.exe"
+    if not fileExists(nssmold):
+      echo "[-] nssm not found at: ", nssmold
+      quit()
+    copyFile(nssmold, nssmnew)
+    nssmnew.setFilePermissions({fpUserExec, fpUserWrite, fpUserRead})  
+
+    echo "[+] change config"
+    res = execShellCmd("\"$#\" changeMaster --master:$# --port:$# --publicKey:$#" % 
+      [newFile, master, $port, pubKey])
+    if res != 0: raise 
+
+    echo "[+] adding autostart (installing nssm)"
+    # WINDOWS DRIVES ME CRAZY fix this vvvvv
+    var cmd = "\"" & "\"$#\" install $# \"$#\" Start Automatic" % [nssmnew, SERVICENAME, newFile.replace(" ", "\\ ")] & "\""
+    echo cmd
+    res = execShellCmd( cmd )
+    if res != 0: raise 
+    return true
+  except:
+    echo getCurrentExceptionMsg()
+    return false  
+
+when isMainModule:
+  echo install("MASTERPORT", 1337.uint16, "PUBKEY", autostart = true)

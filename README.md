@@ -67,6 +67,18 @@ walkthrough
 
     ```
 
+compiling
+==========
+
+slaves
+-------
+
+slaves on linux should be compiled with musl so that it can run on
+older linux versions
+
+`nimble slavelin`
+`nimble slavewin`
+
 call commandos 
 ===============
 
