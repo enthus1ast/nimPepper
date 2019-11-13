@@ -11,6 +11,9 @@ import strutils
 import modules.defaults.sharedmasterfind
 import asyncudp, net
 
+const 
+  RECV_TIMEOUT = 60_000 # after this time of no message from the server, we think we're offline
+
 proc genKeys(slave: PepperSlave) = 
   let seed = seed()
   var keypair = createKeypair(seed)
@@ -99,7 +102,11 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
       opcode: Opcode
       data: string
     try:
-      (opcode, data) = await slave.recvData()
+      var intime = await withTimeout(slave.recvData(), RECV_TIMEOUT)
+      if intime:
+        (opcode, data) = await slave.recvData()
+      else:
+        raise newException(IOError, "recv timed out!")
     except: 
       raise
   
