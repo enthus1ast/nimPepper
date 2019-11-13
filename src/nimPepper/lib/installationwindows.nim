@@ -32,7 +32,7 @@ proc install*(master: string, port: uint16, pubKey: string, autostart = false): 
 
     echo "[+] adding autostart (installing nssm)"
     # WINDOWS DRIVES ME CRAZY fix this vvvvv
-    var cmd = "\"" & "\"$#\" install $# \"$#\" Start Automatic" % [nssmnew, SERVICENAME, newFile.replace(" ", "\\ ")] & "\""
+    var cmd = "\"" & "\"$#\" install $# \"$#\"" % [nssmnew, SERVICENAME, newFile] & "\""
     echo cmd
     res = execShellCmd( cmd )
     if res != 0: raise 
