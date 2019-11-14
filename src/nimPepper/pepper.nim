@@ -137,6 +137,21 @@ elif chk(params, "slaves online", "list all slaves and if theyre online or not",
     unpack(adminRes.output, clientInfo)
     print clientInfo  
 
+elif chk(params, "traps", "list all traps", matches):
+  for adminRes in call("*", "master.trapinfo", ""):
+    # var clientInfo = ClientInfo()
+    # unpack(adminRes.output, clientInfo)
+    
+    for trap, isAlarming in adminRes.output.parseJson().getFields().pairs:
+      # echo k, " : ", v
+      if isAlarming.getBool(): 
+        setForegroundColor(fgRed)
+      else:
+        setForegroundColor(fgGreen)
+      echo trap
+    setForegroundColor(fgDefault)
+
+
 elif chk(params, "slaves online interactive", "starts an interactive overview of all slaves and if theire online", matches):
   var so = newSlaveOnline()
   asyncCheck so.pepperSlaveOnlineMain()
@@ -147,6 +162,9 @@ elif chk(params, "slaves online interactive", "starts an interactive overview of
       var clientInfo = ClientInfo()
       unpack(adminRes.output, clientInfo)
       newClients.add clientInfo
+    for adminRes in call("*", "master.trapinfo", ""):
+      ## TODO WE ONLY GET ONE ELEMENT FOR NOW!!!!
+      so.traps = adminRes.output.parseJson()
     so.clients = newClients
     so.resetLastRefresh()
     waitFor sleepAsync(5000)

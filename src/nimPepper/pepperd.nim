@@ -162,6 +162,19 @@ proc slaveinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Fu
       continue
   await adminClient.ws.close()
 
+proc trapinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Future[void] {.async, gcsafe.} = 
+  var adminRes = MsgAdminRes()
+  adminRes.target = "none" #$target.name
+  adminRes.output = $ await pepperd.modLoader.call(pepperd, "traps.trapinfo", "") #pack(clientInfo)
+  let adminResStr = pack(adminRes)
+
+  try:
+    await adminClient.ws.sendBinary(adminResStr)
+  except:
+    echo getCurrentExceptionMsg()
+    # continue
+  await adminClient.ws.close()  
+
 proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Future[void] {.async.} =
   for target in pepperd.targets(adminReq.targets):
     var msgReq = MsgReq()
@@ -221,10 +234,14 @@ proc adminWsCallback(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Fu
   var adminReq = MsgAdminReq()
   unpack(data, adminReq)
 
+  # TODO these commands should all be modules
   case adminReq.commands
   of "master.slaveinfo":
     echo "GOT master.slaveinfo"
     await pepperd.slaveinfo(adminClient, adminReq)
+  of "master.trapinfo":
+    echo "GOT master.trapinfo"
+    await pepperd.trapinfo(adminClient, adminReq)
   else:
     await pepperd.callOnSlaves(adminClient, adminReq)
 

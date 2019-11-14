@@ -23,6 +23,7 @@ let trapfolder = getAppDir() / "/traps/"
 var dbs: Table[string, FlatDb]
 var modmtraps* {.exportc.} = newMasterModule("traps")
 var traps: TomlValueRef
+var currentState: JsonNode = %* {}
 
 proc genName(trap: string): string =
   trapfolder / trap & ".jsonl"
@@ -62,7 +63,9 @@ proc checkTraps*(): Future[void] {.async.} =
   while true:
     for trap in dbs.keys():
       # echo "CHECKING TRAP: ", trap
-      echo trap, ": ", trap.isAlarm()
+      # echo trap, ": ", 
+      currentState[trap] = %* trap.isAlarm()
+    echo $currentState
     await sleepAsync(1_000)
 
 modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
@@ -75,10 +78,11 @@ modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.asyn
   # createDir(getAppDir() / "www/slaves/windows")
   # createDir(getAppDir() / "www/slaves/macos")
 
-# modmtraps.boundCommands["getstate"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
-
-#   # echo "www COMMAND CALLED"
-#   return %* {"outp": "pong"}
+modmtraps.boundCommands["trapinfo"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+  #   # echo "www COMMAND CALLED"
+  # result = %* {}
+  return currentState
+  # return %* {"outp": "pong"}
 
 # modmtraps.slaveConnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
 #   echo "WWW CLIENT CONNECTS:", client.peerAddr #, repr client

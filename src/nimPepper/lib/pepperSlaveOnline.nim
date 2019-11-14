@@ -2,12 +2,15 @@ import os, strutils, strformat, macros, times
 import illwill
 import asyncdispatch
 import messages
+import json # todo we should not need json here?
+import tables
 
 type 
   Modes = enum
     Overview, Detail
   SlaveOnline* = ref object
     clients*: seq[ClientInfo]
+    traps*: JsonNode # TODO 
     mode: Modes
     tb: TerminalBuffer
     seperator: bool
@@ -41,8 +44,33 @@ proc getLongestName(clients: seq[ClientInfo]): int =
     if client.name.len > result:
       result = client.name.len
 
+proc nextLine(tb: var TerminalBuffer, lines = 1) = 
+  tb.setCursorYPos(tb.getCursorYPos() + lines)
+  tb.setCursorXPos(0)
+
 proc renderOverview(so: SlaveOnline) =
   var line = 0
+
+  ### TRAPS
+  # TODO: does not break
+  # so.tb.write($so.traps) # todo
+  so.tb.write(bgWhite, fgBlack, "TRAPS:")
+  so.tb.nextLine()
+  for trap, isAlarming in so.traps.getFields().pairs:
+    var bg =  
+      if isAlarming.getBool(): 
+        bgRed
+      else:
+        bgGreen
+    so.tb.write(bg, fgBlack, trap, bgBlack, " ")
+    # echo trap
+  # setForegroundColor(fgDefault)
+  
+  so.tb.nextLine(2)
+
+  ### CLIENTS
+  so.tb.write(bgWhite, fgBlack, "CLIENTS:")
+  so.tb.nextLine()
   for client in so.clients:
     var bg = 
       if client.online:
@@ -116,6 +144,7 @@ proc newSlaveOnline*(): SlaveOnline =
   result = SlaveOnline()
   result.mode = Overview
   result.seperator = true
+  result.traps = %* {}
 
 when isMainModule:
   var so = newSlaveOnline()
