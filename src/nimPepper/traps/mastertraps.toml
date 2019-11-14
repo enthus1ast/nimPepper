@@ -23,4 +23,4 @@ every = "1 days 12 hours"
 
 [trap.test123]
 load = "commonTrap"
-every = "1 minutes"
+every = "10 seconds"

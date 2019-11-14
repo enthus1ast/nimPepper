@@ -10,6 +10,8 @@ import json
 import strutils
 import modules.defaults.sharedmasterfind
 import asyncudp, net
+import modules.defaults.trapshared
+
 
 const 
   RECV_TIMEOUT = 60_000 # after this time of no message from the server, we think we're offline
@@ -241,12 +243,14 @@ proc cli(slave: PepperSlave) =
       echo "was it 'good' OR 'bad' ??"
       return 1
     discard
-    let js = %* {
-      "trap": trap,
-      "good": good,
-      "bad": bad,
-      "data": data
-    }
+    var trapTrigger = TrapTrigger(
+      trap: trap,
+      good: good,
+      bad: bad,
+      data: data,
+      dateCreated: $now()
+    )
+    let js = %* trapTrigger
     ## TODO compress sign and crypt the body!
     var client = newHttpclient()
     var res: Response
@@ -271,7 +275,7 @@ proc cli(slave: PepperSlave) =
     if res.body != magicTrapBody:
       echo "no magic trap body"
       quit()
-    echo repr res
+    # echo repr res
 
 
   proc masterfind() = 

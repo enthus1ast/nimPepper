@@ -4,3 +4,4 @@ src/slaves/*
 *.exe
 tests/*
 *.ini
+src/nimPepper/traps/*.jsonl
