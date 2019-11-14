@@ -60,7 +60,7 @@ proc install*(master: string, port: uint16, pubKey: string, autostart = false): 
     echo getCurrentExceptionMsg()
     return false
 
-proc start():
+proc start() =
   discard execShellCmd("systemctl start pepperslave.service")
 
 when isMainModule:
