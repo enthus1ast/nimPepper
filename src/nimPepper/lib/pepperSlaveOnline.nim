@@ -16,6 +16,16 @@ type
     seperator: bool
     lastRefresh: float
 
+# macro writeLb*(tb: var TerminalBuffer, args: varargs[typed]): untyped =
+#   ## like illwill.write but breaks line when terminal is too small
+#   result = newNimNode(nnkStmtList)
+
+#   for item in args.items:
+
+    # if (so.tb.getCursorXPos() + client.name.len) >= so.tb.width:
+    #   so.tb.setCursorXPos(0)
+    #   so.tb.setCursorYPos(so.tb.getCursorYPos() + 1)  
+
 proc resetLastRefresh*(so: SlaveOnline) = 
   so.lastRefresh = epochTime()
 
@@ -49,11 +59,7 @@ proc nextLine(tb: var TerminalBuffer, lines = 1) =
   tb.setCursorXPos(0)
 
 proc renderOverview(so: SlaveOnline) =
-  var line = 0
-
   ### TRAPS
-  # TODO: does not break
-  # so.tb.write($so.traps) # todo
   so.tb.write(bgWhite, fgBlack, "TRAPS:")
   so.tb.nextLine()
   for trap, isAlarming in so.traps.getFields().pairs:
@@ -62,9 +68,9 @@ proc renderOverview(so: SlaveOnline) =
         bgRed
       else:
         bgGreen
+    if (so.tb.getCursorXPos() + trap.len) >= so.tb.width:
+      so.tb.nextLine()
     so.tb.write(bg, fgBlack, trap, bgBlack, " ")
-    # echo trap
-  # setForegroundColor(fgDefault)
   
   so.tb.nextLine(2)
 
@@ -78,8 +84,7 @@ proc renderOverview(so: SlaveOnline) =
       else:
         bgRed
     if (so.tb.getCursorXPos() + client.name.len) >= so.tb.width:
-      so.tb.setCursorXPos(0)
-      so.tb.setCursorYPos(so.tb.getCursorYPos() + 1)
+      so.tb.nextLine()
     so.tb.write(bg, fgBlack, client.name, bgBlack, " ")
     # if so.seperator:
     #   so.tb.write(bgWhite, fgBlack, "|", resetStyle)
@@ -145,6 +150,8 @@ proc newSlaveOnline*(): SlaveOnline =
   result.mode = Overview
   result.seperator = true
   result.traps = %* {}
+
+
 
 when isMainModule:
   var so = newSlaveOnline()
