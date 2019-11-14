@@ -1,8 +1,8 @@
 import os, strutils
 
 const
-  # DEFAULT_PATH = "/opt/pepperslave/"
-  SYSTEMD_SERVICE_DIR = "/etc/systemd/system/"
+  # DEFAULT_PATH = "/opt/pepperslave/" # TODO
+  SYSTEMD_SERVICE_DIR = "/etc/systemd/system/" # TODO
   DEFAULT_PATH = "/tmp/opt/pepperslave/"
   SYSTEMD_SERVICE_FILE = """
 [Unit]
@@ -12,12 +12,10 @@ After=syslog.target network.target
 [Service]
 Type=simple
 PIDFile=/var/run/pepperslave/slave.pid
-;EnvironmentFile=-/etc/sysconfig/network
-;ExecStartPre=-/usr/libexec/postfix/aliasesdb
-;ExecStartPre=-/usr/libexec/postfix/chroot-update
 ExecStart=$#
-;ExecReload=/usr/sbin/postfix reload
-;ExecStop=/usr/sbin/postfix stop
+RemainAfterExit=no
+Restart=always
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
@@ -62,6 +60,8 @@ proc install*(master: string, port: uint16, pubKey: string, autostart = false): 
     echo getCurrentExceptionMsg()
     return false
 
+proc start():
+  discard execShellCmd("systemctl start pepperslave.service")
 
 when isMainModule:
   echo install("", 123, true)
