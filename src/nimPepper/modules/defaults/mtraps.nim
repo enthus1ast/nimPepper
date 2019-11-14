@@ -1,4 +1,3 @@
-# import ../../typesModuleSlave
 import ../../lib/pepperdImports
 import ../../lib/typesPepperd
 import ../../lib/moduleLoader
@@ -52,13 +51,11 @@ proc triggerTrap*(toml: TomlValueRef, trapTrigger: var TrapTrigger) =
   ## triggers the trap
   trapTrigger.dateStored = $now()
   discard dbs[trapTrigger.trap].append (%* trapTrigger)
-  echo isAlarm(trapTrigger.trap)
 
 proc checkTraps*(): Future[void] {.async.} =
   while true:
     for trap in dbs.keys():
       currentState[trap] = %* trap.isAlarm()
-    echo $currentState
     await sleepAsync(1_000)
 
 modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
@@ -76,7 +73,6 @@ modmtraps.boundCommands["trapinfo"] = proc(obj: Pepperd, params: string): Future
 
 modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
   ## returns true if the http request was handled by this callback  
-  echo "TRAP TRIGGER"
   if not ($request.url.path).startsWith("/trap"):
     return false 
   var trapTrigger: TrapTrigger
