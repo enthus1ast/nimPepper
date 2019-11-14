@@ -75,7 +75,9 @@ proc recvData(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
   try:
     (opcode, data) = await slave.ws.readData()
   except:
-    debug("[slave] ws connection interrupted: ") #, client.request.client.getPeerAddr)
+    debug("[slave] ws connection interrupted: ") 
+    echo getCurrentExceptionMsg()
+    #, client.request.client.getPeerAddr)
     # await pepperd.handleLostClient(client.request, client.ws)
     raise
   case opcode
@@ -102,12 +104,15 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
       opcode: Opcode
       data: string
     try:
-      var intime = await withTimeout(slave.recvData(), RECV_TIMEOUT)
+      var recvFut = slave.recvData()
+      var intime = await withTimeout(recvFut, RECV_TIMEOUT)
       if intime:
-        (opcode, data) = await slave.recvData()
+        (opcode, data) = await recvFut
       else:
+        echo "[pepperslave] master send us nothing, timeout!"
         raise newException(IOError, "recv timed out!")
     except: 
+      echo getCurrentExceptionMsg()
       raise
   
     let myPrivateKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
