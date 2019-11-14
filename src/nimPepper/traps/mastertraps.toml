@@ -1,26 +1,26 @@
 ## traps are like heartbeats, a heartbeat MUST occure `every` time units
 ## if not the trap "check" is failed
 
-[[templates.commontrap]]
+[templates.commontrap]
 trigger = "once" # the trap will trigger only once, must be "rearmed" by a good message
 # trigger = "repeat" # the trap will trigger every check
 
 
-[[trap.commonShareBackup]]
+[trap.commonShareBackup]
 load = "commonTrap"
 every = "1 days 12 hours"
 slave = "backup1"
 
-[[trap.crisprShareBackup]]
+[trap.crisprShareBackup]
 load = "commonTrap"
 every = "1 hours 30 minutes"
 slave = "backup1"
 
-[[trap.davidNotebookBackup]]
+[trap.davidNotebookBackup]
 load = "commonTrap"
 every = "1 days 12 hours"
 
 
-[[trap.test123]]
+[trap.test123]
 load = "commonTrap"
 every = "1 minutes"
