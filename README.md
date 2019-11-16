@@ -234,6 +234,37 @@ The beginnings of this plan can be seen with:
 ![smallOverview](screenshots/smallOverview.png)
 ![detailedOverview](screenshots/detailedOverview.png)
 
+
+traps
+=====
+
+you can define "trap" (a trap is like a heartbeat) in the `config/mastertraps.toml` file.
+eg:
+
+```
+[trap.commonShareBackup]
+load = "commonTrap"
+every = "1 days 12 hours"
+slave = "backup1"
+
+[trap.crisprShareBackup]
+load = "commonTrap"
+every = "1 hours 30 minutes"
+slave = "backup1"
+```
+
+a pepperslave can then "trigger the trap" by:
+
+```
+./pepperslave triggerTrap --trap "commonShareBackup" --good --data "some data"
+```
+
+this line could exists for example in a backup script, 
+to give the administrator a nice overview.
+
+if the trap is not triggered in time (given by the every field), the "heartbeat" is failed and the trap is displayed red in the overview.
+
+
 test ws
 ======
 
