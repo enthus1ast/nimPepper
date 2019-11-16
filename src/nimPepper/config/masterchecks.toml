@@ -1,0 +1,40 @@
+["biochem reachable http"]
+check = "web_200"
+url = "http://biochem2.com"
+every = "10 minutes"
+
+["biochem reachable https"]
+check = "web_200"
+url = "https://biochem2.com"
+every = "10 minutes"
+
+["biochem shows correct stuff http"]
+check = "web_contains"
+url = "http://biochem2.com"
+contains = "Life Science Research in Germany, Biochemistry, Goethe University, SFB 1177, Ubiquitin, Autophagy, Signaling"
+every = "10 minutes"
+
+["biochem shows correct stuff https"]
+check = "web_contains"
+url = "https://biochem2.com"
+contains = "Life Science Research in Germany, Biochemistry, Goethe University, SFB 1177, Ubiquitin, Autophagy, Signaling"
+every = "10 minutes"
+
+["code0 reachable"]
+check = "web_200"
+url = "http://code0.xyz"
+every = "10 minutes"
+
+["git.code0 reachable"]
+check = "web_200"
+url = "http://git.code0.xyz"
+every = "10 minutes"
+
+["ch4t.code0 reachable"]
+check = "web_200"
+url = "http://ch4t.code0.xyz"
+every = "10 minutes"
+
+["ping jugene"]
+check = "ping"
+host = "192.168.2.155"
