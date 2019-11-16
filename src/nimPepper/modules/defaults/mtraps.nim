@@ -13,13 +13,17 @@ import flatdb
 import tables
 import ../../lib/parseTomlDates
 
-let trapconfig = getAppDir() / "/traps/mastertraps.toml"
+let trapconfig = getAppDir() / "/config/mastertraps.toml"
 let trapfolder = getAppDir() / "/traps/"
 
-var dbs: Table[string, FlatDb]
-var modmtraps* {.exportc.} = newMasterModule("traps")
-var traps: TomlValueRef
-var currentState: JsonNode = %* {}
+type
+  Dbs = Table[string, FlatDb]
+
+var 
+  dbs: Dbs
+  modmtraps* {.exportc.} = newMasterModule("traps")
+  traps: TomlValueRef
+  currentState: JsonNode = %* {}
 
 proc genName(trap: string): string =
   trapfolder / trap & ".jsonl"
@@ -43,11 +47,11 @@ proc loadTrapDbs(traps: TomlValueRef) =
     dbs[k] = newFlatDb(genName(k))
     discard dbs[k].load()
 
-proc trapKnown*(toml: TomlValueRef, trap: string): bool =
+proc trapKnown*(traps: TomlValueRef, trap: string): bool =
   ## return true if a trap with this name exists
-  return toml["trap"].existsKey(trap)
+  return traps["trap"].existsKey(trap)
 
-proc triggerTrap*(toml: TomlValueRef, trapTrigger: var TrapTrigger) =
+proc triggerTrap*(dbs: Dbs, trapTrigger: var TrapTrigger) =
   ## triggers the trap
   trapTrigger.dateStored = $now()
   discard dbs[trapTrigger.trap].append (%* trapTrigger)
@@ -58,6 +62,15 @@ proc checkTraps*(): Future[void] {.async.} =
       currentState[trap] = %* trap.isAlarm()
     await sleepAsync(1_000)
 
+proc info*(traps: TomlValueRef) =
+  discard
+  echo "[mtraps] Active Traps:"
+  for trap, conf in traps["trap"].getTable():
+    echo "[mtraps] $trap -> $every" % @[
+      "trap", trap,
+      "every", conf["every"].getStr()
+    ]
+
 modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   echo "trap init"
   createDir(getAppDir() / "traps")
@@ -66,6 +79,7 @@ modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.asyn
     return
   traps = parseToml.parseFile(trapconfig)
   traps.loadTrapDbs()
+  traps.info()
   asyncCheck checkTraps()
 
 modmtraps.boundCommands["trapinfo"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
@@ -86,5 +100,5 @@ modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.as
     echo "[mtraps] unknown trap: ", trapTrigger.trap
     await request.respond(Http400, "unknown trap" )
     return
-  traps.triggerTrap(trapTrigger)
+  dbs.triggerTrap(trapTrigger)
   await request.respond(Http200, "bum" ) 
