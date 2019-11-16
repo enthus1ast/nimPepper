@@ -4,6 +4,12 @@ import netfuncs
 import messages
 import hashes
 
+proc myPublicKey*(pepperd: Pepperd): PublicKey =
+  return pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
+
+proc myPrivateKey*(pepperd: Pepperd): PrivateKey =
+  return pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
+
 proc hash*(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
   h = h !& hash(ws.sock.getFd)
@@ -29,7 +35,7 @@ proc send*(pepperd: Pepperd, client: Client, msg: MessageConcept): Future[void] 
   let receiverPublicKey =  client.publicKey #pepperd.configSlave.getSectionValue("master", "publicKey").decode().toPublicKey  
   let envelope = packEnvelope(msg)
   var firstLevel: FirstLevel
-  if not packToFirstLevel(
+  if not seal(
       myPrivatKey,
       myPublicKey,
       receiverPublicKey,
@@ -87,6 +93,6 @@ proc recv*(pepperd: Pepperd, client: Client): Future[tuple[firstLevel: FirstLeve
     await pepperd.handleLostClient(client.request, client.ws)
     raise
   let myPrivateKey = pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-  if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
+  if not unseal(myPrivateKey, data, result.firstLevel, result.envelope):
     debug("[pepperd] could not unpack the whole message")
     raise

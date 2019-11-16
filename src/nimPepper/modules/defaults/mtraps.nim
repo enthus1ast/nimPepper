@@ -1,9 +1,9 @@
 import ../../lib/pepperdImports
 import ../../lib/typesPepperd
 import ../../lib/moduleLoader
-# import ../../lib/messages
-# import ../../lib/netfuncs
-# import ../../lib/pepperdFuncs
+import ../../lib/messages
+import ../../lib/netfuncs
+import ../../lib/pepperdFuncs
 import asynchttpserver # for the httpCallback and httpAdminCallback
 import strutils
 import times
@@ -90,7 +90,14 @@ modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.as
   if not ($request.url.path).startsWith("/trap"):
     return false 
   var trapTrigger: TrapTrigger
+  ## TODO unseal does not really fit atm. Do it later
+  # var firstLevel: FirstLevel
+  # var envelope: MessageEnvelope
+  # if not unseal(obj.myPrivateKey(), request.body, firstLevel, envelope):
+  #   await request.respond(Http400, "crypt failure sorry" )
+  #   return
   try:
+    # trapTrigger = firstLevel.raw.parseJson().to(TrapTrigger)
     trapTrigger = request.body.parseJson().to(TrapTrigger)
   except:
     echo "[mtraps] could not parse json"

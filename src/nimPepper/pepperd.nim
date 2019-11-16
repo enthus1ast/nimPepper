@@ -10,12 +10,6 @@ import modules/masterModules
 import options
 import hashes
 
-proc myPublicKey(pepperd: Pepperd): PublicKey =
-  return pepperd.configPepperd.getSectionValue("master", "publicKey").decode().toPublicKey
-
-proc myPrivateKey(pepperd: Pepperd): PrivateKey =
-  return pepperd.configPepperd.getSectionValue("master", "privateKey").decode().toPrivateKey
-
 proc newPepperd*(): Pepperd = 
   result = Pepperd()
   result.pathPepperd = getAppDir()

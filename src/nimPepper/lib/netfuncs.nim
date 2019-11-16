@@ -111,7 +111,7 @@ proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, dat
     return false
   return true
 
-proc packToFirstLevel*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
+proc seal*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey, 
     data: string, firstLevel: var FirstLevel): bool =
   ## compress, encrypt and signs a message
   var zippedRaw: string = ""
@@ -152,7 +152,7 @@ proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool =
     return false
   return true
 
-proc unpack*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel, envelope: var MessageEnvelope): bool = 
+proc unseal*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel, envelope: var MessageEnvelope): bool = 
   ## unpacks and decrypts everything
   if not extractFirstLevel(data, firstLevel):
     info("[pepperd] could not extract firstLevel: ") #, client.peerAddr)

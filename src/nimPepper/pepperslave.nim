@@ -118,7 +118,7 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
       raise
   
     let myPrivateKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
-    if not unpack(myPrivateKey, data, result.firstLevel, result.envelope):
+    if not unseal(myPrivateKey, data, result.firstLevel, result.envelope):
       debug("[slave] could not unpack the whole message")
       raise
 
@@ -137,7 +137,7 @@ proc send(slave: PepperSlave, msg: MessageConcept): Future[void] {.async.} =
   let receiverPublicKey = slave.masterPublicKey()
   let envelope = packEnvelope(msg)
   var firstLevel: FirstLevel
-  if not packToFirstLevel(
+  if not seal(
       myPrivatKey,
       myPublicKey,
       receiverPublicKey,
@@ -252,6 +252,8 @@ proc cli(slave: PepperSlave) =
     )
     let js = %* trapTrigger
     ## TODO compress sign and crypt the body!
+    
+
     var client = newHttpclient()
     var res: Response
     # var error: false
