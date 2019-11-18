@@ -1,7 +1,8 @@
 import pepperdImports
 type
   MessageConcept* = concept c
-    c.messageType is MessageType
+    # c.messageType is MessageType
+    c.messageId = string
   MessageType* {.pure.} = enum
     MsgReq, MsgRes, MsgUntrusted
   MessageEnvelope* = object
@@ -14,16 +15,14 @@ type
     signature*: Signature
   MsgReq* = object
     version*: byte
-    messageType*: MessageType
     messageId*: string
     timestamp*: string
-    senderName*: string
-    senderPublicKey*: PublicKey   
+    senderName*: string # TODO move to message envelope? for failing faster on receive
+    senderPublicKey*: PublicKey  # TODO remove ? is in FirstLevel
     command*: string
     params*: string 
   MsgRes* = object
     version*: byte
-    messageType*: MessageType
     messageId*: string
     responseToId*: string
     timestamp*: string

@@ -13,6 +13,7 @@ import flatdb
 import tables
 import ../../lib/parseTomlDates
 import msgpack4nim
+import ../../lib/keymanager
 
 let trapconfig = getAppDir() / "/config/mastertraps.toml"
 let trapfolder = getAppDir() / "/traps/"
@@ -90,19 +91,30 @@ modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.as
   ## returns true if the http request was handled by this callback  
   if not ($request.url.path).startsWith("/trap"):
     return false 
+  var firstLevel: FirstLevel
+  var envelope: MessageEnvelope
+  if not unseal(obj.myPrivateKey(), request.body, firstLevel, envelope):
+    await request.respond(Http400, "crypt failure sorry" )
+    return
+
+  var req = MsgReq()
+  try:
+    envelope.msg.unpack(req)
+  except:
+    echo "[mtraps] cannot unpack MsgReq"
+    return
+  
+  if not obj.isAccepted(req.senderName, firstLevel.senderPublicKey.toString):
+    echo "[mtraps] sender is not accepted: ", req.senderName
+    return
+
   var trapTrigger: TrapTrigger
-  ## TODO unseal does not really fit atm. Do it later
-  # var firstLevel: FirstLevel
-  # var envelope: MessageEnvelope
-  # if not unseal(obj.myPrivateKey(), request.body, firstLevel, envelope):
-  #   await request.respond(Http400, "crypt failure sorry" )
-  #   return
   try:
     # trapTrigger = firstLevel.raw.parseJson().to(TrapTrigger)
-    request.body.unpack(trapTrigger)
+    req.params.unpack(trapTrigger)
   except:
-    echo "[mtraps] could not parse json"
-    await request.respond(Http400, "invalid json" )   
+    echo "[mtraps] could not unpack to traptrigger"
+    await request.respond(Http400, "invalid traptrigger" )   
     return
   if not traps.trapKnown(trapTrigger.trap):
     echo "[mtraps] unknown trap: ", trapTrigger.trap

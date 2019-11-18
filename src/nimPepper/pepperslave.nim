@@ -86,21 +86,21 @@ proc recvData(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
     raise
   case opcode
   of Close:
-    debug("[pepperd] ws connection closed: ") #, client.peerAddr)
+    debug("[slave] ws connection closed: ") #, client.peerAddr)
     # await pepperd.handleLostClient(client.request, client.ws)
     raise 
   of Text:
-    debug("[pepperd] 'text' ws not implemented: ") #, client.peerAddr)
+    debug("[slave] 'text' ws not implemented: ") #, client.peerAddr)
   of Binary:
     return (opcode, data)
   of Ping:
-    debug("[pepperd] 'ping' ws not implemented: ") #, client.peerAddr)
+    debug("[slave] 'ping' ws not implemented: ") #, client.peerAddr)
     raise
   of Pong:
-    debug("[pepperd] 'pong' ws not implemented: ") #, client.peerAddr)
+    debug("[slave] 'pong' ws not implemented: ") #, client.peerAddr)
     raise
   of Cont:
-    debug("[pepperd] 'cont' ws not implemented: ") #, client.peerAddr)  
+    debug("[slave] 'cont' ws not implemented: ") #, client.peerAddr)  
     raise
 
 proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: MessageEnvelope]] {.async.} =
@@ -155,7 +155,7 @@ proc sub(str: string, substitutionContext: StringTableRef): string =
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   var helo = MsgReq()
-  helo.messageType = MessageType.MsgReq
+  # helo.messageType = MessageType.MsgReq
   helo.command = "helo"
   helo.senderName = hostname()
   helo.senderPublicKey = slave.myPublicKey()
@@ -168,6 +168,9 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
       (firstLevel, envelope) = await slave.recv()
     except:
       break
+    if firstLevel.senderPublicKey != slave.masterPublicKey():
+      echo "[slave] not my master"
+      return
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
     let outp = await call[SlaveModule, PepperSlave](
@@ -245,18 +248,52 @@ proc cli(slave: PepperSlave) =
       data: data,
       dateCreated: $now()
     )
+    ####
     ## TODO compress sign and crypt the body!
+    # MsgReq* = object
+    #   version*: byte
+    #   messageId*: string
+    #   timestamp*: string
+    #   senderName*: string
+    #   senderPublicKey*: PublicKey   
+    #   command*: string
+    #   params*: string 
+    let myPrivatKey = slave.myPrivateKey()
+    let myPublicKey = slave.myPublicKey()
+    let msg = MsgReq(
+      senderName: hostname(),
+      senderPublicKey: myPublicKey,
+      command: "trap.trigger",
+      params: pack(trapTrigger)
+    )
+    let receiverPublicKey = slave.masterPublicKey()
+    let envelope = packEnvelope(msg)
+    var firstLevel: FirstLevel
+    if not seal(
+        myPrivatKey,
+        myPublicKey,
+        receiverPublicKey,
+        pack(envelope),
+        firstLevel
+        ):
+      echo "could not seal the msg for trapTrigger"
+      return
+    let firstLevelMsg = pack(firstLevel)
+    # await sendBinary(slave.ws, firstLevelMsg)
+    ###
     
     var client = newHttpclient()
     var res: Response
     try:
       res = client.post(
-        "http://$host/trap/$trap/$slave" % [
+        # "http://$host/trap/$trap/$slave" % [
+        "http://$host/trap/$trap" % [
           "host", slave.getMasterHost(),
           "trap", trap, # TODO encode html
-          "slave", hostname() # TODO encode html
+          # "slave", hostname() # TODO encode html
         ], 
-        body = pack(trapTrigger)
+        # body =  pack(trapTrigger)
+        body = firstLevelMsg
       )
     except:
       echo "could not trigger trap ($trap):" % ["trap", trap], getCurrentExceptionMsg()
@@ -269,7 +306,6 @@ proc cli(slave: PepperSlave) =
       echo "no magic trap body"
       quit()
     # echo repr res
-
 
   proc masterfind() = 
     ## tries to find a pepperd master on the network, 
@@ -289,11 +325,8 @@ proc cli(slave: PepperSlave) =
           except:
             discard
 
-
   if paramCount() > 0:
     dispatchMulti([install],  [showkey], [changeMaster], [triggerTrap], [masterfind])
-
-
 
 when isMainModule:
   randomize()
