@@ -11,7 +11,9 @@ import strutils
 import modules.defaults.sharedmasterfind
 import asyncudp, net
 import modules.defaults.trapshared
-
+import msgpack4nim
+import cligen
+import httpclient
 
 const 
   RECV_TIMEOUT = 60_000 # after this time of no message from the server, we think we're offline
@@ -116,7 +118,6 @@ proc recv(slave: PepperSlave): Future[tuple[firstLevel: FirstLevel, envelope: Me
     except: 
       echo getCurrentExceptionMsg()
       raise
-  
     let myPrivateKey = slave.configSlave.getSectionValue("slave", "privateKey").decode().toPrivateKey
     if not unseal(myPrivateKey, data, result.firstLevel, result.envelope):
       debug("[slave] could not unpack the whole message")
@@ -159,7 +160,6 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
   helo.senderName = hostname()
   helo.senderPublicKey = slave.myPublicKey()
   await slave.send(helo)
-
   while true:
     var 
       firstLevel: FirstLevel
@@ -168,7 +168,6 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
       (firstLevel, envelope) = await slave.recv()
     except:
       break
-
     var msgReq = MsgReq()
     unpack(envelope.msg, msgReq)
     let outp = await call[SlaveModule, PepperSlave](
@@ -177,7 +176,6 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
       msgReq.command.sub(slave.substitutionContext), 
       msgReq.params.sub(slave.substitutionContext)
     )
-
     var msgRes = MsgRes()
     msgRes.senderName = hostname()
     msgRes.senderPublicKey = slave.myPublicKey()
@@ -206,9 +204,6 @@ proc run(slave: PepperSlave): Future[void] {.async.} =
       if (not slave.ws.isNil) and (not slave.ws.sock.isNil) and (not slave.ws.sock.isClosed): # todo maybe to paranoid?
         slave.ws.sock.close() # close the connection in case of error
     await sleepAsync(5_000)
-
-import cligen
-import httpclient
 
 proc cli(slave: PepperSlave) = 
   proc install(master: string, port: uint16, publicKey: string, autostart = false): int=
@@ -250,13 +245,10 @@ proc cli(slave: PepperSlave) =
       data: data,
       dateCreated: $now()
     )
-    let js = %* trapTrigger
     ## TODO compress sign and crypt the body!
     
-
     var client = newHttpclient()
     var res: Response
-    # var error: false
     try:
       res = client.post(
         "http://$host/trap/$trap/$slave" % [
@@ -264,10 +256,9 @@ proc cli(slave: PepperSlave) =
           "trap", trap, # TODO encode html
           "slave", hostname() # TODO encode html
         ], 
-        body = $js
+        body = pack(trapTrigger)
       )
     except:
-      # error = true
       echo "could not trigger trap ($trap):" % ["trap", trap], getCurrentExceptionMsg()
       quit() ## TODO save the trap trigger somewhere and send later 
     

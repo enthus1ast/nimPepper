@@ -12,6 +12,7 @@ import trapshared
 import flatdb
 import tables
 import ../../lib/parseTomlDates
+import msgpack4nim
 
 let trapconfig = getAppDir() / "/config/mastertraps.toml"
 let trapfolder = getAppDir() / "/traps/"
@@ -98,7 +99,7 @@ modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.as
   #   return
   try:
     # trapTrigger = firstLevel.raw.parseJson().to(TrapTrigger)
-    trapTrigger = request.body.parseJson().to(TrapTrigger)
+    request.body.unpack(trapTrigger)
   except:
     echo "[mtraps] could not parse json"
     await request.respond(Http400, "invalid json" )   
