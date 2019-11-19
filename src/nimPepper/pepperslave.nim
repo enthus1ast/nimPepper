@@ -81,13 +81,10 @@ proc recvData(slave: PepperSlave): Future[(Opcode, string)] {.async.} =
   except:
     debug("[slave] ws connection interrupted: ") 
     echo getCurrentExceptionMsg()
-    #, client.request.client.getPeerAddr)
-    # await pepperd.handleLostClient(client.request, client.ws)
     raise
   case opcode
   of Close:
     debug("[slave] ws connection closed: ") #, client.peerAddr)
-    # await pepperd.handleLostClient(client.request, client.ws)
     raise 
   of Text:
     debug("[slave] 'text' ws not implemented: ") #, client.peerAddr)
@@ -155,10 +152,8 @@ proc sub(str: string, substitutionContext: StringTableRef): string =
 
 proc handleConnection(slave: PepperSlave): Future[void] {.async.} =   
   var helo = MsgReq()
-  # helo.messageType = MessageType.MsgReq
   helo.command = "helo"
   helo.senderName = hostname()
-  helo.senderPublicKey = slave.myPublicKey()
   await slave.send(helo)
   while true:
     var 
@@ -181,9 +176,7 @@ proc handleConnection(slave: PepperSlave): Future[void] {.async.} =
     )
     var msgRes = MsgRes()
     msgRes.senderName = hostname()
-    msgRes.senderPublicKey = slave.myPublicKey()
     msgRes.output = $ outp
-    # echo "Going to send"
     await slave.send(msgRes)
 
 proc connectToMaster(slave: PepperSlave): Future[void] {.async.} = 
@@ -262,7 +255,6 @@ proc cli(slave: PepperSlave) =
     let myPublicKey = slave.myPublicKey()
     let msg = MsgReq(
       senderName: hostname(),
-      senderPublicKey: myPublicKey,
       command: "trap.trigger",
       params: pack(trapTrigger)
     )

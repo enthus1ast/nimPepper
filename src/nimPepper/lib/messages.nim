@@ -18,7 +18,6 @@ type
     messageId*: string
     timestamp*: string
     senderName*: string # TODO move to message envelope? for failing faster on receive
-    senderPublicKey*: PublicKey  # TODO remove ? is in FirstLevel
     command*: string
     params*: string 
   MsgRes* = object
@@ -27,7 +26,6 @@ type
     responseToId*: string
     timestamp*: string
     senderName*: string
-    senderPublicKey*: PublicKey  
     output*: string
   MsgAdminReq* = object
     targets*: string

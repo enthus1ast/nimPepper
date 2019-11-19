@@ -63,10 +63,6 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     echo "[authenticate] not a MessageType.MsgReq"
     raise
 
-  if req.senderPublicKey != firstLevel.senderPublicKey:
-    echo "error senderPublicKey in packed msg is different that in unencrypted firstLeve"
-    raise
-
   if req.senderName == "":
     echo "erro senderName == \"\""
     raise
@@ -74,13 +70,12 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
   result.name = req.senderName
 
   echo "create files:"
-  if pepperd.isUnaccepted(req.senderName, req.senderPublicKey.toString):
+  if pepperd.isUnaccepted(req.senderName, firstLevel.senderPublicKey.toString):
     echo "client is unaccepted, closing"
     await result.ws.close()
     raise
-  elif pepperd.isAccepted(req.senderName, req.senderPublicKey.toString):
+  elif pepperd.isAccepted(req.senderName, firstLevel.senderPublicKey.toString):
     echo "[+] client is accepted, proceed"
-
     ## Adding client to the clients table
     if not pepperd.clients.contains(result.ws):
       pepperd.clients.add(
@@ -98,7 +93,7 @@ proc authenticate(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Futur
     return result
   else:
     echo "client is unknown yet, create an unnacepted file."
-    pepperd.createUnaccepted(req.senderName, req.senderPublicKey.toString)
+    pepperd.createUnaccepted(req.senderName, firstLevel.senderPublicKey.toString)
     await result.ws.close()
     raise
   echo "[BUG] reached the end... (not possible....)"
@@ -166,7 +161,6 @@ proc trapinfo(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Fut
     await adminClient.ws.sendBinary(adminResStr)
   except:
     echo getCurrentExceptionMsg()
-    # continue
   await adminClient.ws.close()  
 
 proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq): Future[void] {.async.} =
@@ -174,8 +168,6 @@ proc callOnSlaves(pepperd: Pepperd, adminClient: Client, adminReq: MsgAdminReq):
     var msgReq = MsgReq()
     msgReq.command = adminReq.commands
     msgReq.params = adminReq.commandParams
-    msgReq.senderPublicKey = pepperd.myPublicKey()
-
     try:
       await pepperd.send(target, msgReq)
     except:
