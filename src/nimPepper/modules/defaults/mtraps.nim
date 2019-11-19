@@ -15,9 +15,6 @@ import ../../lib/parseTomlDates
 import msgpack4nim
 import ../../lib/keymanager
 
-let trapconfig = getAppDir() / "/config/mastertraps.toml"
-let trapfolder = getAppDir() / "/traps/"
-
 type
   Dbs = Table[string, FlatDb]
 
@@ -27,8 +24,8 @@ var
   traps: TomlValueRef
   currentState: JsonNode = %* {}
 
-proc genName(trap: string): string =
-  trapfolder / trap & ".jsonl"
+proc genName(pepperd: Pepperd, trap: string): string =
+  pepperd.configPepperd.getSectionValue("traps", "trapdbfolder") / trap & ".jsonl"
 
 proc isAlarm(trap: string): bool =
   ## checks trap if is in alarming state
@@ -43,10 +40,10 @@ proc isAlarm(trap: string): bool =
   else:
     return false
 
-proc loadTrapDbs(traps: TomlValueRef) =
+proc loadTrapDbs(pepperd: Pepperd, traps: TomlValueRef) =
   ## creates a db file for every configured trap
   for k, v in traps["trap"].getTable:
-    dbs[k] = newFlatDb(genName(k))
+    dbs[k] = newFlatDb(pepperd.genName(k))
     discard dbs[k].load()
 
 proc trapKnown*(traps: TomlValueRef, trap: string): bool =
@@ -73,27 +70,28 @@ proc info*(traps: TomlValueRef) =
       "every", conf["every"].getStr()
     ]
 
-modmtraps.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+modmtraps.initProc = proc(pepperd: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   echo "trap init"
+  let trapconfig = pepperd.configPepperd.getSectionValue("traps", "trapconfig")
   createDir(getAppDir() / "traps")
   if not fileExists(trapconfig):
     echo "[mtraps] not found: ", trapconfig
     return
   traps = parseToml.parseFile(trapconfig)
-  traps.loadTrapDbs()
+  pepperd.loadTrapDbs(traps)
   traps.info()
   asyncCheck checkTraps()
 
-modmtraps.boundCommands["trapinfo"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
+modmtraps.boundCommands["trapinfo"] = proc(pepperd: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   return currentState
 
-modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.async, closure.} =
+modmtraps.httpCallback = proc(pepperd: Pepperd, request: Request): Future[bool] {.async, closure.} =
   ## returns true if the http request was handled by this callback  
   if not ($request.url.path).startsWith("/trap"):
     return false 
   var firstLevel: FirstLevel
   var envelope: MessageEnvelope
-  if not unseal(obj.myPrivateKey(), request.body, firstLevel, envelope):
+  if not unseal(pepperd.myPrivateKey(), request.body, firstLevel, envelope):
     await request.respond(Http400, "crypt failure sorry" )
     return
 
@@ -104,13 +102,12 @@ modmtraps.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.as
     echo "[mtraps] cannot unpack MsgReq"
     return
   
-  if not obj.isAccepted(req.senderName, firstLevel.senderPublicKey.toString):
+  if not pepperd.isAccepted(req.senderName, firstLevel.senderPublicKey.toString):
     echo "[mtraps] sender is not accepted: ", req.senderName
     return
 
   var trapTrigger: TrapTrigger
   try:
-    # trapTrigger = firstLevel.raw.parseJson().to(TrapTrigger)
     req.params.unpack(trapTrigger)
   except:
     echo "[mtraps] could not unpack to traptrigger"
