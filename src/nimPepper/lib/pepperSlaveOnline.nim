@@ -151,8 +151,6 @@ proc newSlaveOnline*(): SlaveOnline =
   result.seperator = true
   result.traps = %* {}
 
-
-
 when isMainModule:
   var so = newSlaveOnline()
   const testPubKey = "m+5oZuoWmtVVzlsyX4FfBJoI3LC99BzdIARYXJjm9Xs="

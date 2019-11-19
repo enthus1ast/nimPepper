@@ -52,7 +52,6 @@ proc splitCommand(cmd: string): tuple[moduleName, commandName: string] =
 
 proc call*[T, boundObj](modLoader: ModLoader[T], obj: boundObj, name, params: string): Future[JsonNode] {.async.} = 
   echo "[module] calling: ", name
-
   var moduleName, commandName: string
   try:
     (moduleName, commandName) = name.splitCommand()

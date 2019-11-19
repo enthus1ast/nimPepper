@@ -118,4 +118,4 @@ modmtraps.httpCallback = proc(pepperd: Pepperd, request: Request): Future[bool] 
     await request.respond(Http400, "unknown trap" )
     return
   dbs.triggerTrap(trapTrigger)
-  await request.respond(Http200, "bum" ) 
+  await request.respond(Http200, "bum" ) # TODO send proper response

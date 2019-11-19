@@ -32,7 +32,6 @@ type
   MasterModuleSlaveDisConnectsProc* = proc(obj: Pepperd, client: Client): Future[void]
   MasterModuleHttpCallbackProc* = proc(obj: Pepperd, request: Request): Future[bool]
   MasterModuleHttpAdminCallbackProc* = proc(obj: Pepperd, request: Request): Future[bool]
-
   MasterModule* = object
     name*: string
     initProc*: MasterModuleInitProc

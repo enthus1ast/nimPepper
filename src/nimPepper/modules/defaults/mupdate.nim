@@ -9,22 +9,13 @@ import asynchttpserver # for the httpCallback and httpAdminCallback
 import strutils
 import times
 import ../../lib/httpfilesharing
-# import matcher
 
-# var module* {.exportc.} = newSlaveModule("defaults")
 var modmupdate* {.exportc.} = newMasterModule("update")
 
-
 modmupdate.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
-  # asyncCheck obj.pingClients
-  # echo "www INIT CALLED"
   createDir(getAppDir() / "www/slaves/linux")
   createDir(getAppDir() / "www/slaves/windows")
   createDir(getAppDir() / "www/slaves/macos")
-
-# modmupdate.boundCommands["dummy"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
-#   echo "www COMMAND CALLED"
-#   return %* {"outp": "pong"}
 
 modmupdate.slaveConnects = proc(obj: Pepperd, client: Client): Future[void] {.async, closure.} =
   echo "WWW CLIENT CONNECTS:", client.peerAddr #, repr client
@@ -49,7 +40,6 @@ modmupdate.httpCallback = proc(obj: Pepperd, request: Request): Future[bool] {.a
       return
     var  slaveBinary = readFile(slavePath)
     await request.respond(Http200, slaveBinary )
-
   of "/www/slaves/windows/latest":
     await request.respond(Http200, "latest windows")
   else:

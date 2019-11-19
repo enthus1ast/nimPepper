@@ -21,8 +21,6 @@ proc match*(inputP: var OptParser, pattern: string, matches: StringTableRef): bo
     let curP = $patternSeq[idx].key
     if curP.startsWith("{") and curP.endswith("}"):
       matches[curP.strip(chars ={'{','}'})] = curI
-    # elif curP.startsWith("[") and curP.endswith("]"):
-    #   matches[curP.strip(chars ={'{','}'})] = curI
     else:
       if curI != curP: return false
   return true

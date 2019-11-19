@@ -63,7 +63,6 @@ proc unzipData*(uncryptedRaw: string, unzippedRaw: var string): bool =
   ## false otherwise
   try:
     unzippedRaw = uncompress(uncryptedRaw)
-    # echo unzippedRaw.len
   except:
     echo getCurrentExceptionMsg()
     return false
@@ -99,13 +98,11 @@ proc unpackFromFirstLevel*(myPrivateKey: PrivateKey, firstLevel: FirstLevel, dat
   if not verifySignature(firstLevel):
     info("[pepperd] could not verify signature on data")
     return false
-
   var uncryptedRaw: string = ""
   let raw = firstLevel.raw
   if not uncryptData(myPrivateKey, senderPublicKey, raw, uncryptedRaw):
     info("[pepperd] could not uncrypt data!")
     return false
-
   if not unzipData(uncryptedRaw, data):
     info("[pepperd] could not uncompress data!")
     return false
@@ -118,17 +115,14 @@ proc seal*(myPrivatKey: PrivateKey, myPublicKey, receiverPublicKey: PublicKey,
   if not zipData(data, zippedRaw):
     debug("[slave] could not zip data")
     return false
-  
   var cryptedRaw: string = ""
   if not encryptData(myPrivatKey, receiverPublicKey, zippedRaw, cryptedRaw):
     debug("[slave] could not encrypt data")
     return false
-  
   var signature: Signature
   if not genSignature(myPrivatKey, myPublicKey, cryptedRaw, signature):
     debug("[slave] could not generate signature")
     return false
-
   firstLevel.senderPublicKey = myPublicKey
   firstLevel.raw = cryptedRaw
   firstLevel.signature = signature
@@ -142,7 +136,6 @@ proc randomString(len: int = 10): string =
 proc packEnvelope*(msg: MessageConcept): MessageEnvelope = 
   result = MessageEnvelope()
   result.nonce = randomString(random(10))
-  # result.messageType = msg.messageType
   result.msg = pack(msg)
 
 proc openEnvelope*(str: string, envelope: var MessageEnvelope): bool = 
@@ -157,12 +150,10 @@ proc unseal*(myPrivateKey: PrivateKey, data: string, firstLevel: var FirstLevel,
   if not extractFirstLevel(data, firstLevel):
     info("[pepperd] could not extract firstLevel: ") #, client.peerAddr)
     return false
-
   var unzippedRaw: string = ""
   if not unpackFromFirstLevel(myPrivateKey, firstLevel, unzippedRaw):
     info("[pepperd] could not unpackFromFirstLevel") 
     return false
-
   if not openEnvelope(unzippedRaw, envelope):
     info("[pepperd] could not unpackEnvelope")
     return false

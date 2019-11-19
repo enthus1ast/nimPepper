@@ -42,7 +42,6 @@ proc isAccepted*(pepperd: Pepperd, slaveNameTainted: TaintedString, publicKeyStr
 
 proc getUnaccepted*(pepperd: Pepperd): seq[SlaveForOutput] = 
   var globstr = pepperd.pathUnacceptedKeys / "*.pubkey"
-  # echo globstr
   for path in walkFiles(globstr):
     result.add(SlaveForOutput(
       slaveName: path.splitFile.name,
@@ -72,9 +71,6 @@ proc accept*(pepperd: Pepperd, slaveNameTainted: TaintedString) =
   var target = targetDir / slaveName & ".pubkey"
   createDir(targetDir)
   moveFile(source, target)
-
-# proc delete*(pepperd: Pepperd, slaveName: string) = 
-#   ## deletes a given slave's public key
 
 proc unacept*(pepperd: Pepperd, slaveNameTainted: TaintedString) =
   ## removes a client public key from the accepted,

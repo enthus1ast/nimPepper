@@ -2,11 +2,8 @@ import pepperdImports
 import moduleLoader
 import json, asyncdispatch
 export json, asyncdispatch
-# import typesPepperSlave
 import tables, strtabs
 export tables, strtabs
-# import typesModuleSlave
-# import pepperslaveImports
 
 type
   PepperSlave* = ref object
@@ -17,7 +14,6 @@ type
     ws*: AsyncWebSocket
     modLoader*: ModLoader[SlaveModule]
     substitutionContext*: StringTableRef
-
   ######## Types for slave modules
   SlaveModuleInitProc* = proc(obj: PepperSlave, params: string): Future[JsonNode]
   SlaveModuleUnInitProc* = proc(obj: PepperSlave, params: string): Future[JsonNode]

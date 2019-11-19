@@ -8,7 +8,7 @@ elif defined(linux):
   import getlin
 elif defined(macos):
   import getmac
-# var module* {.exportc.} = newSlaveModule("defaults")
+
 var modsdetect* {.exportc.} = newSlaveModule("detect")
 
 proc getOs(): string =
@@ -30,17 +30,6 @@ proc getOsVer(): string =
 
 modsdetect.boundCommands["detect"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
   return %* {
-    # "outp": "NISCHT",
-    # "json": {
     "os": getOs(),
     "osver": getOsVer()
-
-    # }
-    
   }
-
-# modsdetect.boundCommands["substitutions"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
-#   var res = ""
-#   for key, val in obj.substitutionContext:
-#     res.add "$#: $# \n" % [key ,val]
-#   return %* {"outp": res}

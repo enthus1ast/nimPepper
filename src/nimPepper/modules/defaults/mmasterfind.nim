@@ -4,11 +4,9 @@ import ../../lib/typesPepperd
 import ../../lib/moduleLoader
 import ../../lib/messages
 import ../../lib/netfuncs
-# import ../../lib/pepperdFuncs
 import asyncudp
 import multicast
 import strutils
-
 import sharedmasterfind
 
 var modmmasterfind* {.exportc.} = newMasterModule("masterfind")
@@ -35,6 +33,3 @@ proc serveMulticastAnswerer(obj: Pepperd): Future[void] {.async.} =
 
 modmmasterfind.initProc = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
   asyncCheck obj.serveMulticastAnswerer()
-
-# modmping.boundCommands["ping"] = proc(obj: Pepperd, params: string): Future[JsonNode] {.async, closure.} =
-#   return %* {"outp": "pong"}

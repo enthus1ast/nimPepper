@@ -32,10 +32,3 @@ modspac.boundCommands["ping"] = proc(obj: PepperSlave, params: string): Future[J
   return %* {
     "outp": outp,
   }
-
-
-# modsdetect.boundCommands["substitutions"] = proc(obj: PepperSlave, params: string): Future[JsonNode] {.async, closure.} =
-#   var res = ""
-#   for key, val in obj.substitutionContext:
-#     res.add "$#: $# \n" % [key ,val]
-#   return %* {"outp": res}

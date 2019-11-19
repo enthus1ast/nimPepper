@@ -1,6 +1,5 @@
 import times, strutils, sequtils
 
-
 proc parseDuration*(str: string): Duration = 
   ## parses a string like: "1 days 12 hours" into a `Duration`
   result = initDuration()

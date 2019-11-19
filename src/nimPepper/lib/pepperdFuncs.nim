@@ -13,11 +13,10 @@ proc myPrivateKey*(pepperd: Pepperd): PrivateKey =
 proc hash*(ws: AsyncWebSocket): Hash = 
   var h: Hash = 0
   h = h !& hash(ws.sock.getFd)
-  # h = h !& hash
   return h
 
 proc handleLostClient*(pepperd: Pepperd, request: Request, ws: AsyncWebSocket): Future[void] {.async, gcsafe.} =
-  info("[pepperd] lost client: ") #,  #request.client.getPeerAddr)
+  info("[pepperd] lost client: ")
   if pepperd.clients.contains(ws):
     var client = pepperd.clients[ws]
     # # Call the module handlers
@@ -59,11 +58,6 @@ proc recvData*(pepperd: Pepperd, client: Client): Future[(Opcode, string)] {.asy
     debug("[pepperd] ws connection interrupted: ", client.request.client.getPeerAddr)
     await pepperd.handleLostClient(client.request, client.ws)
     raise
-  # debug("[pepperd] got ws frame from: $# opcode: $# \nframe:\n$#" % [
-  #     $client.peerAddr,
-  #     $opcode,
-  #     data
-  # ])  
   case opcode
   of Close:
     debug("[pepperd] ws connection closed: ", client.peerAddr)
