@@ -286,13 +286,9 @@ proc cli(slave: PepperSlave) =
     var res: Response
     try:
       res = client.post(
-        # "http://$host/trap/$trap/$slave" % [
-        "http://$host/trap/$trap" % [
+        "http://$host/trap" % [
           "host", slave.getMasterHost(),
-          "trap", trap, # TODO encode html
-          # "slave", hostname() # TODO encode html
         ], 
-        # body =  pack(trapTrigger)
         body = firstLevelMsg
       )
     except:
