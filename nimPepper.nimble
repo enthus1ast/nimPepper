@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.4"
+version       = "0.1.5"
 author        = "David Krause"
 description   = "bulk code execution system / monitoring / traps"
 license       = "MIT"
